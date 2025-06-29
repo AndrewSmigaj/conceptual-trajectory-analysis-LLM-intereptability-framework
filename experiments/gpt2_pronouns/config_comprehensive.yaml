@@ -1,0 +1,59 @@
+# Configuration for comprehensive context effects experiment
+experiment:
+  name: "gpt2_comprehensive_context_effects"
+  type: "unified_clustering"
+  description: "Comprehensive analysis of context effects with 10k tokens and 117 contexts"
+  
+model:
+  name: "gpt2"
+  n_layers: 12
+  hidden_size: 768
+
+data:
+  test_cases_path: "expanded_test_cases.json"
+  batch_size: 64  # Increased for faster processing
+  
+clustering:
+  method: "kmeans"
+  k_clusters: 20  # Increased for finer granularity
+  n_init: 10
+  max_iter: 300
+  random_state: 42
+  normalize: true  # L2 normalize before clustering
+  
+analysis:
+  # Contexts to focus on for paper
+  primary_contexts:
+    - "baseline"
+    - "the"
+    - "a" 
+    - "he"
+    - "she"
+    - "is"
+    - "was"
+    - "in"
+    - "on"
+    - "and"
+    - "but"
+    - "not"
+    - "said"
+    - "good"
+    - "."
+    - "sentence_start"
+    
+  # Types of analysis to perform
+  analyses:
+    - "trajectory_extraction"
+    - "unified_clustering"
+    - "transition_matrices"
+    - "activation_distances"
+    - "trajectory_distances"
+    - "context_similarity"
+    - "statistical_tests"
+    
+output:
+  base_dir: "results_comprehensive"
+  save_activations: false  # Don't save raw activations (too large)
+  save_trajectories: true
+  save_models: true
+  checkpoint_frequency: 1000  # Save checkpoint every 1000 tokens

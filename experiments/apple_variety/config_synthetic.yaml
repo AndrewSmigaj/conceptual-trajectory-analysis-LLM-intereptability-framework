@@ -1,0 +1,91 @@
+# Configuration for synthetic apple dataset experiment
+# This uses synthetic data with clear routing patterns to test CTA
+
+experiment:
+  name: "apple_synthetic_routing"
+  type: "classification"  
+  description: "CTA analysis with synthetic apple dataset that has clear routing patterns"
+  output_dir: "experiments/apple_variety/results/apple_synthetic"
+  random_seed: 42
+
+# Use manual labels instead of LLM API
+use_manual_labels: true
+
+dataset:
+  name: "apple_synthetic"
+  data_path: "experiments/apple_variety/synthetic_apples.csv"
+  min_samples_per_variety: 1  # Use all samples
+  test_size: 0.2
+  features:
+    - "brix_numeric"      # Sugar content
+    - "firmness_numeric"  # Texture measurement 
+    - "starch_numeric"    # Maturity indicator
+    - "size_numeric"      # Size score
+    - "season_numeric"    # Harvest timing
+
+model:
+  type: "feedforward"
+  architecture:
+    input_dim: 5  # Only base features for synthetic data
+    hidden_dims: [64, 32, 16]  # Moderate architecture
+    output_dim: 3  # Number of quality routing classes
+    activation: "relu"
+    dropout_rate: 0.2  # Less dropout for synthetic data
+    batch_norm: true
+    
+training:
+  epochs: 200  # Less epochs needed for synthetic data
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001  # Less regularization
+  optimizer: "adam"
+  class_weights: false  # Synthetic data is more balanced
+  early_stopping:
+    patience: 20
+    min_delta: 0.001
+  
+clustering:
+  method: "kmeans"
+  k_selection: "silhouette"  # Simple selection for synthetic data
+  k_min: 2
+  k_max: 10
+  random_state: 42
+
+llm:
+  provider: "none"  # Skip LLM for synthetic test
+  
+trajectory_analysis:
+  windows:
+    early: [0, 1]      # Layers 0-1
+    middle: [1, 2]     # Layers 1-2  
+    late: [2, 3]       # Layers 2-3
+  fragmentation:
+    compute: true
+    threshold: 0.5
+    
+visualization:
+  sankey:
+    height: 800
+    width: 2000
+    top_n_paths: 25
+    show_variety_labels: false  # Varieties are random in synthetic
+    color_by: "routing"  # Color by routing class
+  trajectory:
+    method: "umap"
+    n_components: 3
+    min_dist: 0.1
+    n_neighbors: 15
+  save_format: ["html", "png"]
+  
+analysis:
+  convergence:
+    compute_pairwise: false  # Skip for synthetic
+  economic:
+    compute_impact: false  # No real economics for synthetic
+
+output:
+  save_models: true
+  save_activations: true
+  save_trajectories: true
+  figure_dir: "experiments/apple_variety/figures_synthetic"
+  results_format: "json"

@@ -1,0 +1,37 @@
+% Related Work for Context Transformation Paper
+
+\section{Related Work}
+
+Our investigation of systematic context transformations builds on three research traditions: contextualized representations in language models, probing studies of neural representations, and geometric approaches to understanding neural networks.
+
+\subsection{Contextualized Representations}
+
+The shift from static word embeddings \cite{mikolov2013word2vec, pennington2014glove} to contextualized representations marked a revolution in NLP. ELMo \cite{peters2018elmo} demonstrated that deep bidirectional language models learn representations that vary based on context. BERT \cite{devlin2019bert} and GPT \cite{radford2018gpt, radford2019gpt2} further showed that transformer-based architectures excel at learning context-dependent representations.
+
+While these works established that representations change with context, they did not investigate the \emph{nature} of these changes. Studies have shown that contextualized embeddings capture various linguistic phenomena \cite{tenney2019bert, rogers2020primer}, but the question of whether context-induced changes follow systematic patterns remains unexplored. Our work addresses this gap by demonstrating that these changes are highly structured transformations rather than arbitrary variations.
+
+\subsection{Probing Neural Representations}
+
+A rich literature uses probing classifiers to understand what linguistic information is encoded in neural representations \cite{conneau2018probing, hewitt2019structural}. Particularly relevant is work on how information flows through transformer layers. Tenney et al. \cite{tenney2019bert} showed that BERT processes language in a pipeline fashion, with syntactic information in early layers and semantic information in later layers.
+
+Recent work has begun examining the geometry of these representations. Hewitt and Manning \cite{hewitt2019structural} discovered that syntax trees are embedded in linear subspaces of BERT's representation space. Reif et al. \cite{reif2019visualizing} visualized BERT's geometry, finding meaningful clusters and trajectories. Our work extends this geometric perspective by showing that context systematically transforms these geometric structures.
+
+\subsection{Trajectory and Flow Analysis}
+
+The idea of analyzing trajectories through neural networks has appeared in various forms. Saphra and Lopez \cite{saphra2019understanding} studied how representations evolve during training. Voita et al. \cite{voita2019bottom} analyzed information flow in transformers using gradient-based methods. Most relevant to our work, Ethayarajh \cite{ethayarajh2019contextual} measured how contextualized representations differ from their static counterparts, finding increasing contextualization in upper layers.
+
+However, these works typically analyze aggregate statistics rather than systematic transformation patterns. Our contribution is showing that individual token trajectories follow predictable transformation rules based on linguistic context, revealing a previously hidden structure in how transformers process language.
+
+\subsection{Geometric Deep Learning}
+
+Our geometric analysis of transformations connects to the broader geometric deep learning framework \cite{bronstein2021geometric}. This perspective emphasizes understanding neural networks through the lens of symmetries and transformations. While this framework has been primarily applied to graph neural networks and computer vision, we demonstrate its relevance for understanding language models.
+
+The Procrustes analysis we employ has been used to analyze neural network representations \cite{kornblith2019similarity, williams2021generalized}, typically for comparing representations across models or training runs. We novel apply these techniques to understand how context transforms representations within a single model, revealing systematic geometric patterns.
+
+\subsection{Information Theory in NLP}
+
+Information-theoretic approaches have provided insights into neural language models. Voita and Titov \cite{voita2020information} used information bottleneck theory to understand transformer representations. Pimentel et al. \cite{pimentel2020information} applied information theory to probing tasks. Our use of mutual information and entropy to quantify transformation systematicity extends these approaches to characterize the relationship between context and representation changes.
+
+\subsection{Summary}
+
+While extensive research has established that transformer models learn context-dependent representations, the systematic nature of context-induced transformations has remained hidden. By combining insights from probing studies, geometric analysis, and information theory, we reveal that context acts as a predictable transformation operator. This finding bridges the gap between our empirical understanding of contextualized representations and theoretical frameworks for understanding neural computation.

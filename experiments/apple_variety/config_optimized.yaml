@@ -1,0 +1,111 @@
+analysis:
+  convergence:
+    compute_pairwise: true
+    focus_varieties:
+    - Honeycrisp
+    - Buckeye Gala
+    - Ambrosia
+  economic:
+    compute_impact: true
+    variety_prices:
+      Akane: 1.2
+      Ambrosia: 2.2
+      Blondee: 1.3
+      Buckeye Gala: 1.0
+      Honeycrisp: 2.5
+      Liberty: 1.2
+      Lindamac: 1.1
+      Lindamac McIntosh: 1.1
+      Macoun: 1.4
+      Zestar!: 1.8
+clustering:
+  k_max: 10
+  k_min: 2
+  k_selection: combined
+  method: kmeans
+  random_state: 42
+dataset:
+  data_path: arxiv_apple/apples_processed.csv
+  features:
+  - brix_numeric
+  - firmness_numeric
+  - starch_numeric
+  - size_numeric
+  - season_numeric
+  min_samples_per_variety: 3
+  name: apple_variety_test
+  test_size: 0.2
+experiment:
+  description: 'TEST: CTA analysis of how neural networks route apple varieties through
+    quality classifications'
+  name: apple_quality_routing_test
+  output_dir: experiments/apple_variety/results/apple_variety_test
+  random_seed: 42
+  type: classification
+llm:
+  analysis_categories:
+  - interpretation
+  - bias
+  debug: true
+  model: grok-3
+  optimization_level: 1
+  provider: grok
+  use_cache: true
+model:
+  architecture:
+    activation: relu
+    batch_norm: true
+    dropout_rate: 0.5
+    hidden_dims:
+    - 64
+    - 48
+    - 32
+    input_dim: 10
+    output_dim: 3
+  type: feedforward
+output:
+  figure_dir: ../../arxiv_apple/figures_test
+  results_format: json
+  save_activations: true
+  save_models: true
+  save_trajectories: true
+training:
+  batch_size: 16
+  class_weights: true
+  early_stopping:
+    min_delta: 0.001
+    patience: 30
+  epochs: 300
+  learning_rate: 0.001
+  optimizer: adam
+  weight_decay: 0.001
+trajectory_analysis:
+  fragmentation:
+    compute: true
+    threshold: 0.5
+  windows:
+    early:
+    - 0
+    - 1
+    late:
+    - 2
+    - 3
+    middle:
+    - 1
+    - 2
+use_manual_labels: true
+visualization:
+  sankey:
+    color_by: variety
+    height: 800
+    show_variety_labels: true
+    top_n_paths: 25
+    width: 2000
+  save_format:
+  - html
+  - png
+  trajectory:
+    method: umap
+    min_dist: 0.1
+    n_components: 3
+    n_neighbors: 10

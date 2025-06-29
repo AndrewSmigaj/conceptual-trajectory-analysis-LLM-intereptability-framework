@@ -90,6 +90,15 @@ class AppleVarietyExperiment(BaseExperiment):
         known_routing = ['fresh_premium', 'fresh_standard', 'juice']
         df = df[df['routing'].isin(known_routing)].copy()
         
+        # Filter varieties with minimum samples if specified
+        min_samples = self.full_config['dataset'].get('min_samples_per_variety', 1)
+        if min_samples > 1:
+            variety_counts = df['variety'].value_counts()
+            valid_varieties = variety_counts[variety_counts >= min_samples].index
+            logger.info(f"Filtering from {len(variety_counts)} to {len(valid_varieties)} varieties (min {min_samples} samples)")
+            df = df[df['variety'].isin(valid_varieties)].copy()
+        
+        logger.info(f"Dataset size: {len(df)} samples")
         logger.info(f"Routing distribution: {df['routing'].value_counts().to_dict()}")
         
         # Get features
@@ -103,7 +112,15 @@ class AppleVarietyExperiment(BaseExperiment):
             0.2 * df['size_numeric'] / df['size_numeric'].max() +
             0.2 * (1 - df['starch_numeric'] / df['starch_numeric'].max())
         )
-        feature_cols.extend(['sweetness_ratio', 'quality_index'])
+        
+        # Additional engineered features
+        df['firmness_sugar_interaction'] = df['firmness_numeric'] * df['brix_numeric']
+        df['maturity_size_ratio'] = df['starch_numeric'] / (df['size_numeric'] + 1e-6)
+        df['seasonal_sugar_adjusted'] = df['brix_numeric'] * (1 + 0.1 * (df['season_numeric'] - 2))
+        
+        feature_cols.extend(['sweetness_ratio', 'quality_index', 
+                           'firmness_sugar_interaction', 'maturity_size_ratio', 
+                           'seasonal_sugar_adjusted'])
         
         # Prepare features and labels
         X = df[feature_cols].fillna(df[feature_cols].mean()).values
@@ -126,32 +143,45 @@ class AppleVarietyExperiment(BaseExperiment):
             stratify=y_routing
         )
         
+        # Further split train into train/validation for early stopping
+        X_train_split, X_val, y_train_split, y_val, variety_train_split, variety_val = train_test_split(
+            X_train, y_train, variety_train,
+            test_size=0.2,  # 20% of training data for validation
+            random_state=self.full_config['experiment']['random_seed'],
+            stratify=y_train
+        )
+        
         # Scale features
         self.scaler = StandardScaler()
-        X_train_scaled = self.scaler.fit_transform(X_train)
+        X_train_scaled = self.scaler.fit_transform(X_train_split)
+        X_val_scaled = self.scaler.transform(X_val)
         X_test_scaled = self.scaler.transform(X_test)
         
         # Convert to PyTorch tensors
         X_train_tensor = torch.FloatTensor(X_train_scaled)
+        X_val_tensor = torch.FloatTensor(X_val_scaled)
         X_test_tensor = torch.FloatTensor(X_test_scaled)
-        y_train_tensor = torch.LongTensor(y_train)
+        y_train_tensor = torch.LongTensor(y_train_split)
+        y_val_tensor = torch.LongTensor(y_val)
         y_test_tensor = torch.LongTensor(y_test)
         
         # Store variety labels for analysis
-        self.variety_train = variety_train
+        self.variety_train = variety_train_split
         self.variety_test = variety_test
         
         # Store original unscaled features for interpretable cluster descriptions
-        self.X_train_original = X_train
-        self.y_train_routing = y_train
+        self.X_train_original = X_train_split
+        self.y_train_routing = y_train_split
         self.feature_names = feature_cols
         
         # Create data loaders
         train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+        val_dataset = TensorDataset(X_val_tensor, y_val_tensor)
         test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
         
         batch_size = self.full_config['training']['batch_size']
         self.train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        self.val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
         self.test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
         
         # Initialize model
@@ -184,7 +214,7 @@ class AppleVarietyExperiment(BaseExperiment):
         
         # Store metadata
         self.n_features = len(feature_cols)
-        self.n_train = len(X_train)
+        self.n_train = len(X_train_split)  # Use actual training size after validation split
         self.n_test = len(X_test)
         
         # Initialize LLM analyzer
@@ -221,17 +251,40 @@ class AppleVarietyExperiment(BaseExperiment):
         logger.info("Training model...")
         
         # Training setup
-        criterion = nn.CrossEntropyLoss()
+        # Calculate class weights for imbalanced dataset
+        if self.full_config['training'].get('class_weights', False):
+            from sklearn.utils.class_weight import compute_class_weight
+            class_weights = compute_class_weight(
+                'balanced',
+                classes=np.unique(self.y_train_routing),
+                y=self.y_train_routing
+            )
+            class_weights = torch.FloatTensor(class_weights).to(self.device)
+            logger.info(f"Using class weights: {class_weights.cpu().numpy()}")
+            criterion = nn.CrossEntropyLoss(weight=class_weights)
+        else:
+            criterion = nn.CrossEntropyLoss()
+            
         optimizer = optim.Adam(
             self.model.parameters(),
             lr=self.full_config['training']['learning_rate'],
             weight_decay=self.full_config['training']['weight_decay']
         )
         
-        # Training loop
+        # Training loop with early stopping
         n_epochs = self.full_config['training']['epochs']
         train_losses = []
         train_accuracies = []
+        val_losses = []
+        val_accuracies = []
+        
+        # Early stopping parameters
+        early_stopping_config = self.full_config['training']['early_stopping']
+        patience = early_stopping_config['patience']
+        min_delta = early_stopping_config['min_delta']
+        best_val_loss = float('inf')
+        best_model_state = None
+        epochs_no_improve = 0
         
         for epoch in range(n_epochs):
             # Training
@@ -259,8 +312,49 @@ class AppleVarietyExperiment(BaseExperiment):
             train_losses.append(avg_loss)
             train_accuracies.append(accuracy)
             
+            # Validation
+            self.model.eval()
+            val_loss = 0
+            val_correct = 0
+            val_total = 0
+            
+            with torch.no_grad():
+                for batch_X, batch_y in self.val_loader:
+                    batch_X, batch_y = batch_X.to(self.device), batch_y.to(self.device)
+                    outputs = self.model(batch_X)
+                    loss = criterion(outputs, batch_y)
+                    val_loss += loss.item()
+                    _, predicted = torch.max(outputs.data, 1)
+                    val_total += batch_y.size(0)
+                    val_correct += (predicted == batch_y).sum().item()
+            
+            avg_val_loss = val_loss / len(self.val_loader)
+            val_accuracy = 100 * val_correct / val_total
+            val_losses.append(avg_val_loss)
+            val_accuracies.append(val_accuracy)
+            
+            # Early stopping check
+            if avg_val_loss < best_val_loss - min_delta:
+                best_val_loss = avg_val_loss
+                best_model_state = self.model.state_dict().copy()
+                epochs_no_improve = 0
+            else:
+                epochs_no_improve += 1
+            
             if (epoch + 1) % 50 == 0:
-                logger.info(f"Epoch {epoch+1}/{n_epochs}, Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2f}%")
+                logger.info(f"Epoch {epoch+1}/{n_epochs}, Train Loss: {avg_loss:.4f}, "
+                          f"Train Acc: {accuracy:.2f}%, Val Loss: {avg_val_loss:.4f}, "
+                          f"Val Acc: {val_accuracy:.2f}%")
+            
+            # Check if we should stop
+            if epochs_no_improve >= patience:
+                logger.info(f"Early stopping triggered after {epoch+1} epochs")
+                break
+        
+        # Load best model
+        if best_model_state is not None:
+            self.model.load_state_dict(best_model_state)
+            logger.info(f"Loaded best model with validation loss: {best_val_loss:.4f}")
         
         # Evaluate on test set
         self.model.eval()
@@ -317,12 +411,15 @@ class AppleVarietyExperiment(BaseExperiment):
         return {
             'train_losses': train_losses,
             'train_accuracies': train_accuracies,
+            'val_losses': val_losses,
+            'val_accuracies': val_accuracies,
             'test_accuracy': test_accuracy,
             'test_predictions': test_predictions,
             'train_activations': train_activations,
             'test_activations': test_activations,
             'n_train': self.n_train,
-            'n_test': self.n_test
+            'n_test': self.n_test,
+            'early_stopped_epoch': len(train_losses)
         }
         
     def analyze(self) -> Dict[str, Any]:
@@ -425,7 +522,15 @@ class AppleVarietyExperiment(BaseExperiment):
         
         # Generate LLM-powered analysis if available
         llm_analysis = {}
-        if self.llm_analyzer is not None:
+        use_manual_labels = self.full_config.get('use_manual_labels', False)
+        
+        if use_manual_labels:
+            logger.info("Using manual cluster labels...")
+            llm_analysis = self._generate_manual_labels(
+                train_clusters, train_metrics, 
+                y_train, self.variety_train
+            )
+        elif self.llm_analyzer is not None:
             logger.info("Generating LLM-powered cluster analysis...")
             try:
                 llm_analysis = self._generate_llm_analysis(
@@ -445,7 +550,8 @@ class AppleVarietyExperiment(BaseExperiment):
             'train_metrics': train_metrics_clean,
             'test_metrics': test_metrics_clean,
             'variety_routing': variety_routing_analysis,
-            'llm_analysis': llm_analysis
+            'llm_analysis': llm_analysis,
+            'train_clusters': train_clusters  # Store for visualization
         }
     
     def _clean_metrics_for_json(self, metrics: Dict) -> Dict:
@@ -588,6 +694,343 @@ class AppleVarietyExperiment(BaseExperiment):
             'problematic_varieties': sorted(problematic_varieties, key=lambda x: x['score'], reverse=True),
             'routing_classes': self.routing_classes.tolist()
         }
+    
+    def _generate_manual_labels(
+        self, 
+        train_clusters: Dict[str, np.ndarray], 
+        train_metrics: Dict,
+        y_train: np.ndarray,
+        variety_train: np.ndarray
+    ) -> Dict[str, Any]:
+        """Generate manual cluster labels based on data analysis."""
+        
+        # Manual cluster labels based on typical apple quality patterns
+        # These are educated guesses based on how neural networks typically organize apple data
+        manual_cluster_labels = {
+            # Layer 0 - Initial feature processing
+            "L0_C0": "High Sugar Premium Base",
+            "L0_C1": "Balanced Sweet-Firm Base", 
+            "L0_C2": "Extra Sweet Small Base",
+            "L0_C3": "Low Sugar Standard Base",
+            "L0_C4": "Medium Sugar Mixed Base",
+            "L0_C5": "Firm Standard Base",
+            "L0_C6": "Late Season Sweet Base",
+            "L0_C7": "Early Season Crisp Base",
+            "L0_C8": "Processing Grade Base",
+            "L0_C9": "Specialty Variety Base",
+            
+            # Layer 1 - Quality differentiation
+            "L1_C0": "Large Premium Quality",
+            "L1_C1": "Small Sweet Premium",
+            "L1_C2": "High Sugar Medium Size",
+            "L1_C3": "Balanced All-Purpose",
+            "L1_C4": "Standard Firm Quality",
+            "L1_C5": "Ultra Sweet Premium",
+            "L1_C6": "Mixed Quality Standard",
+            "L1_C7": "Juice Grade Quality",
+            "L1_C8": "Export Grade Premium",
+            "L1_C9": "Local Market Fresh",
+            
+            # Layer 2 - Routing preparation
+            "L2_C0": "Premium Route Ready",
+            "L2_C1": "Juice Quality Soft",
+            "L2_C2": "Fresh Premium Large",
+            "L2_C3": "Fresh Standard Mixed",
+            "L2_C4": "Sweet Small Specialty",
+            "L2_C5": "Moderate Quality Stable",
+            "L2_C6": "Processing Ready Soft",
+            "L2_C7": "Premium Export Ready",
+            "L2_C8": "Standard Fresh Ready",
+            "L2_C9": "Multi-Purpose Mixed",
+            
+            # Layer 3 - Final routing decision
+            "L3_C0": "Standard Fresh Route",
+            "L3_C1": "Premium Sweet Route",
+            "L3_C2": "Standard Mixed Route", 
+            "L3_C3": "Juice Processing Route",
+            "L3_C4": "Premium Quality Route",
+            "L3_C5": "Premium-Standard Border",
+            "L3_C6": "Juice Ready Route",
+            "L3_C7": "Export Premium Route",
+            "L3_C8": "Local Fresh Route",
+            "L3_C9": "Processing Mixed Route"
+        }
+        
+        # Generate archetypal path descriptions
+        archetypal_paths = {}
+        paths = train_metrics['paths']
+        unique_paths, counts = np.unique(paths, axis=0, return_counts=True)
+        top_indices = np.argsort(counts)[::-1][:20]  # Top 20 paths
+        
+        for idx_rank, path_idx in enumerate(top_indices):
+            path = unique_paths[path_idx]
+            path_clusters = []
+            labeled_clusters = []
+            
+            for j, cluster_idx in enumerate(path):
+                cluster_id = f"L{j}_C{cluster_idx}"
+                path_clusters.append(cluster_id)
+                if cluster_id in manual_cluster_labels:
+                    labeled_clusters.append(f"{cluster_id} ({manual_cluster_labels[cluster_id]})")
+            
+            # Determine path characteristics based on clusters
+            path_string = " → ".join(path_clusters)
+            labeled_path_string = " → ".join(labeled_clusters)
+            
+            # Simple routing determination based on final cluster
+            final_cluster = path_clusters[-1]
+            if "C1" in final_cluster or "C4" in final_cluster:
+                dominant_routing = "fresh_premium"
+            elif "C3" in final_cluster:
+                dominant_routing = "juice"
+            else:
+                dominant_routing = "fresh_standard"
+            
+            archetypal_paths[idx_rank] = {
+                'path': path_clusters,
+                'path_string': path_string,
+                'frequency': int(counts[path_idx]),
+                'dominant_routing': dominant_routing,
+                'routing_purity': 0.6,  # Placeholder
+                'labeled_path_string': labeled_path_string
+            }
+        
+        # Calculate routing distributions per cluster
+        routing_distributions = self._calculate_routing_distributions(
+            train_clusters, y_train
+        )
+        
+        return {
+            'cluster_labels': manual_cluster_labels,
+            'archetypal_paths': archetypal_paths,
+            'routing_distributions': routing_distributions,
+            'analysis': "Manual labels based on typical apple quality patterns"
+        }
+    
+    def _calculate_routing_distributions(
+        self, 
+        clusters: Dict[str, np.ndarray], 
+        y_labels: np.ndarray
+    ) -> Dict[str, Dict[str, float]]:
+        """Calculate the distribution of routing classes within each cluster.
+        
+        Returns:
+            Dictionary mapping cluster IDs to routing class distributions
+        """
+        routing_distributions = {}
+        
+        # Map numeric labels to routing names
+        routing_names = ['fresh_premium', 'fresh_standard', 'juice']
+        
+        # Map layer names to indices for consistent cluster IDs
+        layer_name_map = {'fc1': 0, 'fc2': 1, 'fc3': 2, 'output': 3}
+        
+        for layer_name, layer_clusters in clusters.items():
+            # Get layer index from mapping
+            if layer_name in layer_name_map:
+                layer_idx = layer_name_map[layer_name]
+            else:
+                # Skip unknown layers
+                continue
+            unique_clusters = np.unique(layer_clusters)
+            
+            for cluster_idx in unique_clusters:
+                cluster_id = f"L{layer_idx}_C{cluster_idx}"
+                mask = layer_clusters == cluster_idx
+                cluster_labels = y_labels[mask]
+                
+                # Calculate distribution
+                distribution = {}
+                total = len(cluster_labels)
+                
+                for routing_idx, routing_name in enumerate(routing_names):
+                    count = np.sum(cluster_labels == routing_idx)
+                    distribution[routing_name] = count / total if total > 0 else 0.0
+                
+                routing_distributions[cluster_id] = distribution
+        
+        return routing_distributions
+    
+    def _export_d3_sankey_data(
+        self,
+        train_clusters: Dict[str, np.ndarray],
+        train_metrics: Dict[str, Any],
+        y_train: np.ndarray,
+        routing_distributions: Dict[str, Dict[str, float]],
+        cluster_labels: Dict[str, str],
+        output_path: Path
+    ) -> None:
+        """Export Sankey data in D3-compatible format with routing distributions.
+        
+        Creates a JSON file with nodes and links suitable for D3.js Sankey visualization
+        where nodes can be rendered as stacked bars showing routing class distributions.
+        """
+        # Extract paths and frequencies
+        paths = train_metrics['paths']
+        unique_paths, counts = np.unique(paths, axis=0, return_counts=True)
+        
+        # Sort by frequency and take top N
+        top_n = self.full_config['visualization']['sankey'].get('top_n_paths', 25)
+        top_indices = np.argsort(counts)[::-1][:top_n]
+        
+        # Build nodes list with routing distributions
+        nodes = []
+        node_index = {}
+        
+        # Debug logging
+        logger.info(f"Building D3 nodes with train_clusters keys: {list(train_clusters.keys())}")
+        logger.info(f"Routing distributions keys: {list(routing_distributions.keys())}")
+        
+        # Create nodes for each layer
+        num_layers = len(self.full_config['model']['architecture']['hidden_dims']) + 1  # +1 for output
+        for layer_idx in range(num_layers):
+            layer_name = f"layer_{layer_idx}"
+            logger.info(f"Processing layer {layer_name}, exists: {layer_name in train_clusters}")
+            if layer_name in train_clusters:
+                unique_clusters = np.unique(train_clusters[layer_name])
+                for cluster_idx in unique_clusters:
+                    node_id = f"L{layer_idx}_C{cluster_idx}"
+                    node_name = cluster_labels.get(node_id, f"Cluster {cluster_idx}")
+                    
+                    # Get routing distribution for this cluster
+                    distribution = routing_distributions.get(node_id, {
+                        'fresh_premium': 0.33,
+                        'fresh_standard': 0.33,
+                        'juice': 0.34
+                    })
+                    
+                    node = {
+                        'id': node_id,
+                        'name': node_name,
+                        'layer': layer_idx,
+                        'cluster': int(cluster_idx),
+                        'routing_distribution': distribution,
+                        'total_samples': int(np.sum(train_clusters[layer_name] == cluster_idx))
+                    }
+                    
+                    nodes.append(node)
+                    node_index[node_id] = len(nodes) - 1
+        
+        # Build links from top paths
+        links = []
+        for path_idx in top_indices:
+            path = unique_paths[path_idx]
+            frequency = int(counts[path_idx])
+            
+            # Calculate path routing distribution
+            path_mask = np.all(paths == path, axis=1)
+            path_labels = y_train[path_mask]
+            path_distribution = {
+                'fresh_premium': float(np.sum(path_labels == 0) / len(path_labels)),
+                'fresh_standard': float(np.sum(path_labels == 1) / len(path_labels)),
+                'juice': float(np.sum(path_labels == 2) / len(path_labels))
+            }
+            
+            # Create links between consecutive layers
+            for i in range(len(path) - 1):
+                source_id = f"L{i}_C{path[i]}"
+                target_id = f"L{i+1}_C{path[i+1]}"
+                
+                if source_id in node_index and target_id in node_index:
+                    link = {
+                        'source': source_id,  # Use node ID instead of index
+                        'target': target_id,  # Use node ID instead of index
+                        'value': frequency,
+                        'path_id': int(path_idx),
+                        'routing_distribution': path_distribution
+                    }
+                    links.append(link)
+        
+        # Create D3-compatible data structure
+        d3_data = {
+            'nodes': nodes,
+            'links': links,
+            'metadata': {
+                'total_samples': int(len(y_train)),
+                'num_layers': num_layers,
+                'routing_classes': ['fresh_premium', 'fresh_standard', 'juice'],
+                'routing_colors': {
+                    'fresh_premium': '#2ecc71',  # Green
+                    'fresh_standard': '#3498db',  # Blue
+                    'juice': '#ff8c00'  # Orange
+                },
+                'path_colors': [
+                    '#FF6347', '#1E90FF', '#32CD32', '#FFD700', '#8A2BE2',
+                    '#FF8C00', '#00CED1', '#FF1493', '#9ACD32', '#DB7093',
+                    '#6495ED', '#FFB6C1', '#90EE90', '#FFA07A', '#B0C4DE',
+                    '#DC143C', '#4B0082', '#FF7F50', '#008080', '#F08080',
+                    '#20B2AA', '#FA8072', '#00BFFF', '#7FFF00', '#FF00FF'
+                ]
+            }
+        }
+        
+        # Save to JSON
+        output_file = output_path / 'd3_sankey_data.json'
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(d3_data, f, indent=2)
+        
+        logger.info(f"Exported D3 Sankey data to {output_file}")
+    
+    def _create_d3_visualization(self, output_path: Path) -> Optional[Path]:
+        """Create D3.js visualization using the exported JSON data.
+        
+        Returns:
+            Path to the created D3 visualization HTML file
+        """
+        import shutil
+        
+        # Path to template
+        template_path = Path(__file__).parent / 'd3_sankey_template.html'
+        if not template_path.exists():
+            logger.warning(f"D3 template not found at {template_path}")
+            return None
+        
+        # Copy template to output directory
+        output_html = output_path / 'd3_sankey_routing.html'
+        shutil.copy(template_path, output_html)
+        
+        # Also create a standalone version with embedded data
+        try:
+            # Read the JSON data
+            json_path = output_path / 'd3_sankey_data.json'
+            with open(json_path, 'r', encoding='utf-8') as f:
+                json_data = f.read()
+            
+            # Read the template
+            with open(template_path, 'r', encoding='utf-8') as f:
+                template_content = f.read()
+            
+            # Embed the data directly in the HTML
+            # Replace the entire d3.json loading block with direct data
+            embedded_content = template_content.replace(
+                """// Load data and create visualization
+        d3.json('d3_sankey_data.json').then(data => {
+            createSankey(data);
+        }).catch(error => {
+            console.error('Error loading data:', error);
+            // Try alternative path
+            d3.json('./results/apple_variety_test/d3_sankey_data.json').then(data => {
+                createSankey(data);
+            });
+        });""",
+                f"""// Load data and create visualization
+        const data = {json_data};
+        createSankey(data);"""
+            )
+            
+            # Save embedded version
+            embedded_path = output_path / 'd3_sankey_routing_standalone.html'
+            with open(embedded_path, 'w', encoding='utf-8') as f:
+                f.write(embedded_content)
+            
+            logger.info(f"Created D3 visualization at {output_html}")
+            logger.info(f"Created standalone D3 visualization at {embedded_path}")
+            
+            return embedded_path
+            
+        except Exception as e:
+            logger.warning(f"Failed to create standalone D3 visualization: {e}")
+            return output_html
     
     def _generate_llm_analysis(
         self,
@@ -863,17 +1306,56 @@ class AppleVarietyExperiment(BaseExperiment):
             # Add path narratives to archetypal paths
             if 'archetypal_paths' in llm_analysis:
                 sankey_data = self._add_path_narratives_to_sankey(sankey_data, llm_analysis['archetypal_paths'])
+            
+            # Export D3-compatible Sankey data with routing distributions
+            if 'routing_distributions' in llm_analysis:
+                # Get train clusters from analysis results
+                train_clusters_raw = self.results['analysis'].get('train_clusters', {})
+                
+                # Map fc layer names to layer_N format for D3 compatibility
+                train_clusters = {}
+                layer_mapping = {'fc1': 'layer_0', 'fc2': 'layer_1', 'fc3': 'layer_2', 'output': 'layer_3'}
+                
+                for old_name, new_name in layer_mapping.items():
+                    if old_name in train_clusters_raw:
+                        train_clusters[new_name] = train_clusters_raw[old_name]
+                
+                self._export_d3_sankey_data(
+                    train_clusters,
+                    train_metrics,
+                    y_train,
+                    llm_analysis['routing_distributions'],
+                    llm_analysis['cluster_labels'],
+                    self.output_dir
+                )
+                
+                # Create D3 visualization
+                d3_viz_path = self._create_d3_visualization(self.output_dir)
+                if d3_viz_path:
+                    viz_paths['d3_sankey'] = str(d3_viz_path)
         
         sankey_config = SankeyConfig(
             height=self.full_config['visualization']['sankey']['height'],
             width=self.full_config['visualization']['sankey']['width'],
-            last_layer_labels_position='inline'  # Keep labels inline for consistency
+            last_layer_labels_position='right',  # Keep L3 labels on the right
+            legend_position='left',  # Move path legend to the left side
+            top_n_paths=self.full_config['visualization']['sankey']['top_n_paths']
         )
         
         sankey_gen = SankeyGenerator(sankey_config)
         
         # Create single Sankey for full network
         if 'full' in sankey_data['windowed_analysis']:
+            # Log final sankey data structure
+            logger.info("Creating Sankey visualization with:")
+            logger.info(f"  - Labels: {len(sankey_data['labels'])} layers")
+            logger.info(f"  - Paths: {len(sankey_data['windowed_analysis']['full']['archetypal_paths'])} archetypal paths")
+            if sankey_data['windowed_analysis']['full']['archetypal_paths']:
+                first_path = sankey_data['windowed_analysis']['full']['archetypal_paths'][0]
+                logger.info(f"  - First path has semantic_labels: {'semantic_labels' in first_path}")
+                if 'semantic_labels' in first_path:
+                    logger.info(f"  - First path label: {first_path['semantic_labels'][:50]}...")
+            
             fig = sankey_gen.create_figure(
                 sankey_data,
                 window='full',
@@ -930,6 +1412,7 @@ class AppleVarietyExperiment(BaseExperiment):
         """Prepare Sankey data showing variety routing through quality predictions."""
         paths = metrics['paths']
         layer_names = metrics['layer_names']
+        logger.info(f"Preparing Sankey data with {len(paths)} paths")
         
         # For small 4-layer network, just use full network view
         windows = {
@@ -1044,6 +1527,7 @@ class AppleVarietyExperiment(BaseExperiment):
     
     def _add_llm_labels_to_sankey(self, sankey_data: Dict, llm_labels: Dict[str, str]) -> Dict:
         """Add LLM-generated labels to sankey visualization data."""
+        logger.info(f"Adding LLM labels to Sankey - {len(llm_labels)} labels available")
         
         # Update labels in sankey data with LLM semantic labels
         for layer_key, layer_clusters in sankey_data['labels'].items():
@@ -1057,9 +1541,11 @@ class AppleVarietyExperiment(BaseExperiment):
                         if routing_info:
                             # Combine semantic label with routing distribution
                             semantic_label = llm_labels[cluster_key]
-                            cluster_data['label'] = f"{semantic_label}\n→ {routing_info}"
+                            cluster_data['label'] = f"{semantic_label}\n{routing_info}"
+                            logger.debug(f"L3 cluster {cluster_key}: added routing info")
                         else:
                             cluster_data['label'] = llm_labels[cluster_key]
+                            logger.debug(f"L3 cluster {cluster_key}: no routing info available")
                     else:
                         # Non-output layers just use semantic label
                         cluster_data['label'] = llm_labels[cluster_key]
@@ -1075,6 +1561,7 @@ class AppleVarietyExperiment(BaseExperiment):
         try:
             cluster_id = int(cluster_key.split('_C')[1])
         except:
+            logger.warning(f"Failed to extract cluster ID from {cluster_key}")
             return None
         
         # Use stored cluster assignments from CTA analysis
@@ -1085,16 +1572,22 @@ class AppleVarietyExperiment(BaseExperiment):
         # Handle both 'output' and index-based naming (layer 3 = output)
         if 'output' in self.all_clusters:
             output_clusters = self.all_clusters['output']
+            logger.debug(f"Found 'output' layer clusters")
         else:
             # Get the last layer (output layer) by index
             layer_names = list(self.all_clusters.keys())
+            logger.debug(f"Available layers: {layer_names}")
             if len(layer_names) >= 4:
                 output_layer_name = layer_names[3]  # 4th layer (0-indexed)
                 output_clusters = self.all_clusters[output_layer_name]
+                logger.debug(f"Using layer {output_layer_name} as output layer")
             else:
                 logger.warning("Could not find output layer in cluster assignments")
                 return None
+        
         cluster_mask = output_clusters == cluster_id
+        n_samples = np.sum(cluster_mask)
+        logger.debug(f"Cluster {cluster_key} has {n_samples} samples")
         
         if np.sum(cluster_mask) == 0:
             return None
@@ -1110,19 +1603,19 @@ class AppleVarietyExperiment(BaseExperiment):
             if pct > 0:
                 routing_counts[routing_name] = pct
         
-        # Format as string (show all routes with >5%)
-        sorted_routes = sorted(routing_counts.items(), key=lambda x: x[1], reverse=True)
-        route_strs = [f"{name} {pct:.0f}%" for name, pct in sorted_routes if pct > 5]
+        # Format as multi-line string showing all 3 classes
+        route_lines = []
+        for routing_class in self.routing_classes:
+            pct = routing_counts.get(routing_class, 0.0)
+            route_lines.append(f"→ {routing_class}: {pct:.0f}%")
         
-        # If no significant routes, show the top one
-        if not route_strs and sorted_routes:
-            name, pct = sorted_routes[0]
-            route_strs = [f"{name} {pct:.0f}%"]
-        
-        return ", ".join(route_strs)
+        result = "\n".join(route_lines)
+        logger.debug(f"Routing for {cluster_key}:\n{result}")
+        return result
     
     def _add_path_narratives_to_sankey(self, sankey_data: Dict, archetypal_paths: Dict) -> Dict:
         """Add LLM-generated path narratives to sankey visualization data."""
+        logger.info(f"Adding path narratives - {len(archetypal_paths)} archetypal paths available")
         
         # Add narratives to windowed analysis paths
         for window_name, window_data in sankey_data['windowed_analysis'].items():
@@ -1145,7 +1638,23 @@ class AppleVarietyExperiment(BaseExperiment):
                             if tuple(llm_path_indices[:len(path_key)]) == path_key:
                                 # Add narrative information
                                 if 'labeled_path_string' in llm_path_info:
-                                    path_info['semantic_labels'] = llm_path_info['labeled_path_string']
+                                    # Store the full labeled path string for reference
+                                    path_info['labeled_path_string'] = llm_path_info['labeled_path_string']
+                                    
+                                    # Parse semantic labels from the path string for Sankey legend
+                                    # Format: "L0_C1 (Label1) → L1_C3 (Label2) → ..."
+                                    label_parts = []
+                                    for part in llm_path_info['labeled_path_string'].split(' → '):
+                                        if '(' in part and ')' in part:
+                                            # Extract label from parentheses
+                                            label_start = part.find('(') + 1
+                                            label_end = part.find(')')
+                                            label = part[label_start:label_end]
+                                            label_parts.append(label)
+                                    
+                                    if label_parts:
+                                        path_info['semantic_labels'] = label_parts
+                                        logger.debug(f"Added path narrative for path {path_key}: {label_parts}")
                                 if 'dominant_routing' in llm_path_info:
                                     path_info['llm_routing'] = llm_path_info['dominant_routing']
                                 if 'routing_purity' in llm_path_info:

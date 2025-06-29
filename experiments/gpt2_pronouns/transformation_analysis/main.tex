@@ -1,0 +1,93 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[margin=1in]{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Title and authors
+\title{Context as Transformation: How Linguistic Context Systematically Reshapes Token Representations in GPT-2}
+
+\author{
+  Anonymous Authors\thanks{Code and data available at: \url{https://anonymous.github.io/context-transformations}}
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% Abstract
+\input{paper_abstract}
+
+% 1. Introduction
+\input{paper_introduction}
+
+% 2. Related Work  
+\input{paper_related_work}
+
+% 3. Methods
+\input{paper_methods_section}
+
+% 4. Results
+\input{paper_results_section}
+
+% 5. Discussion
+\input{paper_discussion_section}
+
+% 6. Conclusion
+\input{paper_conclusion}
+
+% Acknowledgments
+\section*{Acknowledgments}
+We thank the reviewers for their valuable feedback. This work was supported by [funding information to be added].
+
+% Bibliography
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+% Supplementary Material
+\appendix
+\section{Supplementary Material}
+
+\subsection{Extended Results}
+Additional figures and detailed statistics are available in the supplementary materials, including:
+\begin{itemize}
+    \item Complete transition matrices for all context types
+    \item Layer-by-layer transformation evolution
+    \item Extended stratification analysis by token frequency and type
+    \item Full geometric decomposition results
+    \item Additional validation experiments
+\end{itemize}
+
+\subsection{Implementation Details}
+Our analysis framework is implemented in Python using PyTorch, scikit-learn, and SciPy. The complete codebase includes:
+\begin{itemize}
+    \item Unified clustering pipeline for trajectory extraction
+    \item 17 transformation analysis modules
+    \item Comprehensive test suite (175+ tests)
+    \item Visualization tools for exploring transformations
+    \item Documentation and tutorials
+\end{itemize}
+
+\subsection{Reproducibility}
+All experiments can be reproduced using our provided code and configuration files. Key parameters:
+\begin{itemize}
+    \item Model: GPT-2 (124M parameters)
+    \item Clustering: k=10 clusters per layer, unified approach
+    \item Tokens: 1,000 diverse vocabulary samples
+    \item Contexts: 9 linguistic frames (baseline + 8 context types)
+    \item Random seeds: Fixed for reproducibility
+\end{itemize}
+
+\end{document}

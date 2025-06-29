@@ -1,0 +1,97 @@
+# Configuration for realistic synthetic apple dataset experiment
+# This uses synthetic data with true variety-specific characteristics and pricing
+
+experiment:
+  name: "apple_realistic_routing"
+  type: "classification"  
+  description: "CTA analysis with realistic synthetic apple dataset based on actual variety characteristics"
+  output_dir: "experiments/apple_variety/results/apple_realistic"
+  random_seed: 42
+
+# Use manual labels instead of LLM API
+use_manual_labels: true
+
+dataset:
+  name: "apple_realistic"
+  data_path: "experiments/apple_variety/realistic_synthetic_apples.csv"
+  min_samples_per_variety: 1  # Use all samples
+  test_size: 0.2
+  features:
+    - "brix_numeric"      # Sugar content (variety-specific)
+    - "firmness_numeric"  # Texture (variety-specific)
+    - "starch_numeric"    # Maturity (variety-specific)
+    - "size_numeric"      # Size score
+    - "season_numeric"    # Harvest timing (variety-specific)
+  categorical_features:
+    - "variety"           # Include variety as categorical feature
+
+model:
+  type: "feedforward"
+  architecture:
+    input_dim: 20  # 5 numeric + 15 variety one-hot encoded
+    hidden_dims: [128, 64, 32]  # Larger architecture for more complex patterns
+    output_dim: 3  # fresh_premium, fresh_standard, juice
+    activation: "relu"
+    dropout_rate: 0.3
+    batch_norm: true
+    
+training:
+  epochs: 150
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: "adam"
+  class_weights: true  # Handle imbalance (786 standard, 327 premium, 207 juice)
+  early_stopping:
+    patience: 20
+    min_delta: 0.001
+  
+clustering:
+  method: "kmeans"
+  k_selection: "silhouette"
+  k_min: 3
+  k_max: 15  # More clusters for variety-specific patterns
+  random_state: 42
+
+llm:
+  provider: "none"  # Skip LLM for now
+  
+trajectory_analysis:
+  windows:
+    early: [0, 1]      # Layers 0-1
+    middle: [1, 2]     # Layers 1-2  
+    late: [2, 3]       # Layers 2-3
+  fragmentation:
+    compute: true
+    threshold: 0.5
+    
+visualization:
+  sankey:
+    height: 800
+    width: 2000
+    top_n_paths: 30
+    show_variety_labels: true  # Show real variety names
+    color_by: "routing"  # Color by routing class
+  trajectory:
+    method: "umap"
+    n_components: 3
+    min_dist: 0.1
+    n_neighbors: 15
+  save_format: ["html", "png"]
+  
+analysis:
+  convergence:
+    compute_pairwise: true  # Analyze variety convergence
+  economic:
+    compute_impact: true  # Real economic impact with pricing
+    prices:
+      fresh_premium: 2.80
+      fresh_standard: 1.75
+      juice: 0.06
+
+output:
+  save_models: true
+  save_activations: true
+  save_trajectories: true
+  figure_dir: "experiments/apple_variety/figures_realistic"
+  results_format: "json"

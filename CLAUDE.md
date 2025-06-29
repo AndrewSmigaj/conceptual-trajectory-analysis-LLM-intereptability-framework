@@ -2,6 +2,17 @@
 
 ## IMPORTANT RULES FOR CLAUDE
 
+0. **ALWAYS Update WHAT_WE_ARE_DOING.md AND CURRENTLY_WORKING_ON.md**
+   - Before starting any task, append to WHAT_WE_ARE_DOING.md with current timestamp
+   - NEVER delete entries in WHAT_WE_ARE_DOING.md - only append
+   - Update CURRENTLY_WORKING_ON.md regularly:
+     - When making significant progress on tasks
+     - At the end of each work session
+     - Include what was accomplished and what needs to be done next
+     - Update the "Last Updated" section with date, time, and session summary
+   - This prevents confusion about current tasks and maintains continuity when computer resets
+   - Read both files at session start to understand active work
+
 1. **ALWAYS Review Plans Before Implementation**
    - Anytime you plan something (code design, action plan, etc.), STOP and review for:
      - Correctness
@@ -19,10 +30,25 @@
    - Do NOT start implementation until the user explicitly tells you to proceed
    - The user is NOT in auto mode for a reason - respect their control
 
-4. **Session Start Protocol**
-   - At the beginning of every chat, read `ARCHITECTURE.yaml`
-   - Read `CURRENTLY_WORKING_ON.md` to understand current context
+4. **ALWAYS Read and Update ARCHITECTURE.yaml**
+   - At the beginning of EVERY chat, read `ARCHITECTURE.yaml`
+   - Before creating ANY new code, check if it already exists in ARCHITECTURE.yaml
+   - After creating any new module/class, update ARCHITECTURE.yaml immediately
+   - This prevents reimplementation and maintains single sources of truth
+
+5. **Session Start Protocol**
+   - Read `ARCHITECTURE.yaml` FIRST
+   - Read `WHAT_WE_ARE_DOING.md` to understand active tasks
+   - Read `CURRENTLY_WORKING_ON.md` for additional context
    - Check for any `CLAUDE.md` updates
+
+6. **ALWAYS Create Todo List After User Intervention**
+   - Whenever the user intervenes and we discuss tasks/plans, create a todo list
+   - This includes planning sessions, design discussions, or any substantive conversation
+   - Format todo items to be compatible with /process-todos command
+   - Include specific, actionable items (not vague descriptions)
+   - Stop after presenting the todo list and wait for user instruction
+   - This ensures all discussed work is tracked and can be systematically processed
 
 ## Python Environment
 This project uses a Windows-style virtual environment located at `venv311/`.

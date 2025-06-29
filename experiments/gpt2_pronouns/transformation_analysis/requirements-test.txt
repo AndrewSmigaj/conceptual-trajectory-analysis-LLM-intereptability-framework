@@ -1,0 +1,8 @@
+# Testing requirements for transformation analysis
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+pytest-xdist>=3.0.0  # For parallel test execution
+numpy>=1.20.0
+scipy>=1.7.0
+scikit-learn>=1.0.0

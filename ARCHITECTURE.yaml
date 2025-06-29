@@ -45,7 +45,7 @@ modules:
           description: "All visualization components"
           classes:
             - SankeyGenerator:
-                description: "Single source for Sankey diagrams"
+                description: "Single source for Plotly-based Sankey diagrams"
                 config:
                   default_top_n: 25
                   default_height: 800
@@ -55,6 +55,23 @@ modules:
                   - semantic_labels
                   - purity_percentages
                   - configurable_layout
+            - D3SankeyGenerator:
+                description: "D3.js-based interactive Sankey diagrams with stacked bars"
+                location: "concept_fragmentation/visualization/d3_sankey.py"
+                config:
+                  default_top_n: 25
+                  default_height: 800
+                  default_width: 1600
+                  default_font_size: 12
+                features:
+                  - stacked_bar_nodes  # Nodes show routing class composition
+                  - colored_pathways  # Each unique trajectory has distinct color
+                  - interactive_tooltips
+                  - custom_cluster_labels
+                  - routing_composition_display
+                  - full_network_or_windowed
+                  - configurable_colors
+                  - standalone_html_output
             - TrajectoryVisualizer:
                 description: "3D/2D trajectory plots"
                 methods: ["plot_3d", "plot_umap", "plot_tsne"]
@@ -90,11 +107,115 @@ modules:
         description: "5k common words analysis"
         entry_point: "run_experiment.py"
         config: "configs/gpt2_semantic.yaml"
+      
+      pronouns:
+        description: "Context-dependent pronoun trajectory bifurcation"
+        entry_point: "experiments/gpt2_pronouns/run_experiment.py"
+        config: "experiments/gpt2_pronouns/config.yaml"
+        key_findings:
+          - "Pronouns bifurcate within first 4 layers"
+          - "Context tokens can steer trajectory selection"
+          - "Function words redirect to grammatical path"
+          - "Content words maintain semantic path"
+        features:
+          - "Two-token probing methodology"
+          - "Trajectory Divergence Score (TDS) metric"
+          - "Early vs full network analysis"
+          - "Statistical validation of context effects"
+          
+        transformation_analysis:
+          description: "Comprehensive analysis suite for context transformation effects"
+          location: "experiments/gpt2_pronouns/transformation_analysis/"
+          
+          infrastructure:
+            base_transformation_analysis:
+              description: "Abstract base class for all transformation analyses"
+              extends: "BaseExperiment pattern"
+              features:
+                - "Unified output schema"
+                - "Consistent pipeline: load → validate → analyze → save"
+                - "Integrated logging and error handling"
+                
+            transformation_data_loader:
+              description: "Centralized data loading with caching"
+              features:
+                - "LRU caching for performance"
+                - "Handles trajectories, activations, metadata"
+                - "Token stratification utilities"
+                
+            output_schema:
+              description: "Type-safe dataclasses and JSON schema"
+              features:
+                - "Confidence interval support"
+                - "Numpy array serialization"
+                - "Extensible for new analyses"
+                
+          analyses:
+            completed:
+              - stratified_transition_analysis: "Transition matrices with random baselines"
+              - clustering_stability_test: "Validates clustering across random seeds"
+              - permutation_significance_test: "Statistical significance testing"
+              - predictive_transformation_model: "ML models to predict transformations"
+              - procrustes_cv_analysis: "Geometric transformation analysis"
+              - subspace_alignment_analysis: "PCA and canonical angles"
+              - linguistic_grouping_analysis: "Tests linguistic property effects"
+              - bootstrap_confidence_intervals: "Adds CIs to all metrics"
+              - effect_size_calculator: "Cohen's d, Cliff's delta, etc."
+              - comprehensive_validation_suite: "Validates k choice and methods"
+              
+            pending:
+              - information_theory_metrics: "MI, KL divergence, entropy"
+              - interactive_visualization_dashboard: "Plotly Dash exploration"
+              - publication_figures: "Nature/Science formatting"
+              - comprehensive_analysis_report: "LaTeX synthesis"
+              
+          key_findings:
+            - "100% trajectory divergence with context (expected for transformers)"
+            - "Context creates systematic, predictable transformations"
+            - "Transformations are sparse (avg 37% sparser than random)"
+            - "Similar contexts (the/a) produce similar transformations (0.80 similarity)"
+            - "Validated k=10 clustering choice"
+            
+          testing:
+            total_tests: 175
+            coverage: "All analyses have comprehensive test suites"
+            fixtures: "Shared test data in conftest.py"
     
     heart_disease:
       description: "UCI heart disease dataset"
       entry_point: "run_experiment.py"
       config: "configs/heart_disease.yaml"
+    
+    apple_variety:
+      description: "Apple quality routing for agricultural AI"
+      entry_point: "experiments/apple_variety/run_experiment.py"
+      
+      variants:
+        synthetic:
+          description: "100 samples, 10 varieties, balanced classes"
+          config: "experiments/apple_variety/config_synthetic.yaml"
+          results: "experiments/apple_variety/results/apple_synthetic/"
+          
+        realistic:
+          description: "1320 samples, 15 varieties, realistic class imbalance"
+          config: "experiments/apple_variety/config_realistic.yaml"
+          results: "experiments/apple_variety/results/apple_realistic/"
+          key_metrics:
+            test_accuracy: 0.928
+            economic_loss: 186.41
+            unique_trajectories: 13
+            
+      features:
+        - "Economic impact analysis of routing decisions"
+        - "Variety-specific trajectory patterns"
+        - "D3.js interactive sankey visualizations"
+        - "LLM-powered cluster interpretation"
+        
+      outputs:
+        - "Full network sankey (L0→L1→L2→L3)"
+        - "Economic impact reports by variety"
+        - "Routing accuracy analysis"
+        - "Paper-ready LaTeX sections"
 
 data_flow:
   pipeline:

@@ -1,0 +1,63 @@
+# Configuration for reduced comprehensive experiment on D drive
+experiment:
+  name: "gpt2_comprehensive_reduced_20contexts"
+  type: "unified_clustering"
+  description: "Comprehensive analysis with 5k tokens and 20 key contexts"
+  
+model:
+  name: "gpt2"
+  n_layers: 12
+  hidden_size: 768
+
+data:
+  test_cases_path: "reduced_test_cases_20contexts.json"
+  batch_size: 64  # Process 64 at a time
+  
+clustering:
+  method: "kmeans"
+  k_clusters: 20  # k=20 for finer granularity
+  n_init: 10
+  max_iter: 300
+  random_state: 42
+  normalize: true  # L2 normalize before clustering
+  
+analysis:
+  # All 20 contexts are key contexts
+  primary_contexts:
+    - "baseline"
+    - "the"
+    - "a" 
+    - "he"
+    - "she"
+    - "it"
+    - "is"
+    - "was"
+    - "in"
+    - "on"
+    - "with"
+    - "and"
+    - "but"
+    - "not"
+    - "said"
+    - "will"
+    - "good"
+    - "time"
+    - "."
+    - "sentence_start"
+    
+  # Types of analysis to perform
+  analyses:
+    - "trajectory_extraction"
+    - "unified_clustering"
+    - "transition_matrices"
+    - "activation_distances"
+    - "trajectory_distances"
+    - "context_similarity"
+    - "statistical_tests"
+    
+output:
+  base_dir: "/mnt/d/concept_fragmentation_results/comprehensive_reduced"
+  save_activations: true  # Save activations for later analysis
+  save_trajectories: true
+  save_models: true
+  checkpoint_interval: 1000  # Save checkpoint every 1000 test cases (not tokens)

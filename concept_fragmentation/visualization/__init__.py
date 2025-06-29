@@ -5,6 +5,7 @@ from .exceptions import VisualizationError, InvalidDataError
 from .configs import SankeyConfig, TrajectoryConfig, SteppedLayerConfig
 from .sankey import SankeyGenerator
 from .trajectory import TrajectoryVisualizer
+from .d3_sankey import D3SankeyGenerator
 
 __all__ = [
     "BaseVisualizer",
@@ -15,4 +16,5 @@ __all__ = [
     "SteppedLayerConfig",
     "SankeyGenerator",
     "TrajectoryVisualizer",
+    "D3SankeyGenerator",
 ]

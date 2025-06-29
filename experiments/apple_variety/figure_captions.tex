@@ -1,0 +1,81 @@
+% Figure captions for the apple routing case study
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/apple_sankey_early_d3.png}
+\caption{\textbf{Early layer trajectories (layers 0→1) in apple quality routing network.} The network initially organizes 844 training samples into 10 semantically meaningful clusters based on variety and quality characteristics. Cluster labels indicate composition: "Mixed Standard (192 samples)" contains primarily standard-grade apples, while "Premium-Leaning (68 samples)" shows higher premium rates. By layer 1, rapid convergence occurs with 90.6\% of samples flowing into the "Majority Flow" cluster and 9.4\% following "Minority Patterns". This dramatic consolidation from 10 to 2 clusters demonstrates how the network compresses complex quality signals into simplified routing logic. Node heights represent sample counts; colors indicate dominant routing outcome (green: premium, blue: standard, red: juice, purple: minority paths).}
+\label{fig:apple_sankey_early}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/apple_economic_impact.png}
+\caption{\textbf{Economic impact of apple routing decisions by variety.} Bars show total financial loss from juice misrouting for each variety in the training set. Historical varieties like Red Delicious (\$64.26 loss, 93.1\% juice routing) and McIntosh (\$43.20 loss, 100\% juice routing) incur the highest losses, reflecting their market decline. Premium varieties like Honeycrisp (\$3.18 loss, 1.5\% juice routing) and Jazz (\$0 loss, 0\% juice routing) maintain value through accurate routing. The total \$186.41 loss across 133 juice-routed samples demonstrates the economic significance of routing accuracy. Loss calculations based on market prices: premium \$2.80/lb, standard \$1.75/lb, juice \$0.06/lb.}
+\label{fig:apple_economic}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/apple_trajectory_distribution.png}
+    \caption{Path frequency distribution}
+    \label{fig:apple_traj_dist}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.45\textwidth}
+    \includegraphics[width=\textwidth]{figures/apple_variety_convergence.png}
+    \caption{Variety-specific convergence rates}
+    \label{fig:apple_variety_conv}
+\end{subfigure}
+\caption{\textbf{Trajectory analysis of apple routing network.} (a) Distribution of the 13 unique paths through the network, with the dominant pattern [*, 1, 1, 1] accounting for 90.6\% of samples. The long tail of minority paths represents specialized processing for edge cases. (b) Convergence rates by variety category. Premium varieties (Honeycrisp, Jazz, Cosmic Crisp) show higher path diversity (avg. 11.2 unique paths) compared to juice-prone varieties (Red Delicious, McIntosh, Cortland; avg. 9.7 unique paths), suggesting the network maintains more nuanced processing for high-value apples.}
+\label{fig:apple_trajectories}
+\end{figure}
+
+% Table caption for numerical results
+
+\begin{table}[htbp]
+\centering
+\caption{\textbf{Apple routing network performance and CTA metrics.} The network achieves 92.8\% test accuracy while demonstrating rapid conceptual convergence through layers. Economic analysis reveals significant financial impact from misrouting decisions, with variety-specific patterns aligning with market realities.}
+\label{tab:apple_results}
+\begin{tabular}{ll}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+\multicolumn{2}{l}{\textit{Dataset Characteristics}} \\
+Total samples & 1,320 \\
+Number of varieties & 15 \\
+Feature dimensions & 20 (5 physical + 15 variety one-hot) \\
+Class distribution & 327 premium, 786 standard, 207 juice \\
+Class imbalance ratio & 3.8:1 \\
+\midrule
+\multicolumn{2}{l}{\textit{Model Performance}} \\
+Test accuracy & 92.8\% \\
+Validation accuracy & 96.7\% \\
+Training epochs & 108 (early stopping) \\
+Initial loss & 0.985 \\
+Final loss & 0.108 \\
+\midrule
+\multicolumn{2}{l}{\textit{CTA Metrics}} \\
+Layer 0 clusters & 10 \\
+Layer 3 clusters & 2 \\
+Cluster reduction & 80\% \\
+Unique trajectories & 13 \\
+Dominant path frequency & 90.6\% \\
+Minority path frequency & 9.4\% \\
+\midrule
+\multicolumn{2}{l}{\textit{Economic Impact}} \\
+Total loss from misrouting & \$186.41 \\
+Juice-routed samples & 133 \\
+Average loss per juice apple & \$1.40 \\
+Premium→juice loss & \$2.74/lb \\
+Standard→juice loss & \$1.69/lb \\
+\midrule
+\multicolumn{2}{l}{\textit{Variety-Specific Routing}} \\
+Red Delicious juice rate & 93.1\% \\
+McIntosh juice rate & 100.0\% \\
+Cortland juice rate & 100.0\% \\
+Honeycrisp juice rate & 1.5\% \\
+Jazz juice rate & 0.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}

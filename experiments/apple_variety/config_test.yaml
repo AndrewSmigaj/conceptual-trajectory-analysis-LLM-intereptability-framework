@@ -5,50 +5,57 @@ experiment:
   name: "apple_quality_routing_test"
   type: "classification"  
   description: "TEST: CTA analysis of how neural networks route apple varieties through quality classifications"
-  output_dir: "results/apple_variety_test"
+  output_dir: "experiments/apple_variety/results/apple_variety_test"
   random_seed: 42
+
+# Use manual labels instead of LLM API
+use_manual_labels: true
 
 dataset:
   name: "apple_variety_test"
   data_path: "arxiv_apple/apples_processed.csv"
-  # n_varieties: 5  # REMOVED - Now analyzing ALL 350+ varieties
+  min_samples_per_variety: 1  # Use all samples with known routing
   test_size: 0.2
   features:
-    - "brix_numeric"      # Sugar content
-    - "firmness_numeric"  # Texture measurement  
-    - "red_pct_numeric"   # Color percentage
-    - "size_numeric"      # Size score
-    - "season_numeric"    # Harvest timing
-    - "starch_numeric"    # Maturity indicator
+    # Core quality measurements with minimal missing data
+    - "brix_numeric"      # Sugar content (0% missing)
+    - "firmness_numeric"  # Texture measurement (7.2% missing) 
+    - "starch_numeric"    # Maturity indicator (0.8% missing)
+    - "size_numeric"      # Size score (0% missing)
+    - "season_numeric"    # Harvest timing (0% missing)
+    # Excluding red_pct_numeric due to 25% missing data
+    
     # Derived features added by dataset loader:
     # - "sweetness_ratio"  # Brix/acidity ratio
     # - "quality_index"    # Combined quality score
+    # Additional features will be engineered in the experiment
 
 model:
   type: "feedforward"
   architecture:
-    input_dim: 8  # Number of features
-    hidden_dims: [32, 32, 32]  # Uniform dimensions for CTA cross-layer analysis
+    input_dim: 10  # Number of features (5 base + 5 engineered)
+    hidden_dims: [32, 16, 8]  # Smaller architecture for small dataset (3 layers required)
     output_dim: 3  # Number of quality routing classes (fresh_premium, fresh_standard, juice)
     activation: "relu"
-    dropout_rate: 0.2  # Reduced dropout
+    dropout_rate: 0.3  # Moderate dropout for small dataset
     batch_norm: true
     
 training:
-  epochs: 50  # Reduced from 300 for faster testing
-  batch_size: 16  # Smaller batch size
-  learning_rate: 0.001
-  weight_decay: 0.0001
+  epochs: 300  # Train until convergence
+  batch_size: 16  # Smaller batch size for better generalization
+  learning_rate: 0.005  # Moderate learning rate
+  weight_decay: 0.001  # Increased L2 regularization
   optimizer: "adam"
+  class_weights: true  # Handle class imbalance
   early_stopping:
-    patience: 15  # Reduced patience
+    patience: 30  # Increased patience for full convergence
     min_delta: 0.001
   
 clustering:
   method: "kmeans"
-  k_selection: "gap"
+  k_selection: "combined"  # Triangulation: gap (30%), silhouette (40%), davies_bouldin (30%)
   k_min: 2
-  k_max: 6  # Reduced from 10 for testing
+  k_max: 10  # Full range - let combined metrics decide optimal k per layer
   random_state: 42
 
 llm:
@@ -73,7 +80,7 @@ trajectory_analysis:
 visualization:
   sankey:
     height: 800  # Increased for better visibility
-    width: 1600  # Increased for better legend
+    width: 2000  # Increased to prevent cutoff
     top_n_paths: 25    # Show top 25 paths
     show_variety_labels: true
     color_by: "variety"  # Color paths by variety

@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "analysis_type": "publication_figures",
+    "timestamp": "2025-06-23T17:36:43.629848",
+    "version": "1.0.0",
+    "parameters": {
+      "k_clusters": 10,
+      "dpi": 300,
+      "formats": [
+        "png",
+        "pdf"
+      ],
+      "example_token": "light",
+      "style": "nature",
+      "contexts_to_analyze": [
+        "baseline",
+        "determiner_the",
+        "determiner_a",
+        "copula_is",
+        "modal_will",
+        "sentence_start"
+      ]
+    }
+  },
+  "data": {
+    "trajectory_fan": {
+      "png": "results_paper\\publication_figures\\trajectory_fan_plot.png",
+      "pdf": "results_paper\\publication_figures\\trajectory_fan_plot.pdf"
+    },
+    "token_type_metrics": {
+      "png": "results_paper\\publication_figures\\token_type_metrics.png",
+      "pdf": "results_paper\\publication_figures\\token_type_metrics.pdf"
+    },
+    "context_dendrogram": {
+      "png": "results_paper\\publication_figures\\context_similarity_dendrogram.png",
+      "pdf": "results_paper\\publication_figures\\context_similarity_dendrogram.pdf"
+    },
+    "single_token": {
+      "png": "results_paper\\publication_figures\\single_token_showcase.png",
+      "pdf": "results_paper\\publication_figures\\single_token_showcase.pdf"
+    },
+    "transformation_geometry": {
+      "png": "results_paper\\publication_figures\\transformation_geometry.png",
+      "pdf": "results_paper\\publication_figures\\transformation_geometry.pdf"
+    },
+    "layer_evolution": {
+      "png": "results_paper\\publication_figures\\layer_evolution.png",
+      "pdf": "results_paper\\publication_figures\\layer_evolution.pdf"
+    }
+  },
+  "statistics": {
+    "n_figures": 6
+  },
+  "summary": {
+    "key_findings": [
+      "Generated 6 publication-quality figures",
+      "All figures exported at 300 DPI",
+      "Formats: png, pdf"
+    ],
+    "manifest": {
+      "trajectory_fan": {
+        "description": "Trajectory divergence patterns showing how different contexts cause tokens to follow different paths through the network layers.",
+        "caption": "Figure 1. Trajectory fan plot showing divergence of 50 representative tokens under different context conditions. Baseline trajectories (gray) diverge when processed with determiner, copula, and modal contexts.",
+        "files": {
+          "png": "results_paper\\publication_figures\\trajectory_fan_plot.png",
+          "pdf": "results_paper\\publication_figures\\trajectory_fan_plot.pdf"
+        }
+      },
+      "token_type_metrics": {
+        "description": "Comparison of transformation metrics across different token types.",
+        "caption": "Figure 2. Transition entropy and sparsity by token type. Function words show lower entropy but higher sparsity compared to content words. Error bars indicate 95% confidence intervals.",
+        "files": {
+          "png": "results_paper\\publication_figures\\token_type_metrics.png",
+          "pdf": "results_paper\\publication_figures\\token_type_metrics.pdf"
+        }
+      },
+      "context_dendrogram": {
+        "description": "Hierarchical clustering of contexts based on transformation similarity.",
+        "caption": "Figure 3. Context similarity dendrogram based on transformation patterns. Grammatically similar contexts (e.g., determiners) cluster together, while sentence_start shows unique behavior.",
+        "files": {
+          "png": "results_paper\\publication_figures\\context_similarity_dendrogram.png",
+          "pdf": "results_paper\\publication_figures\\context_similarity_dendrogram.pdf"
+        }
+      },
+      "single_token": {
+        "description": "Comprehensive analysis of context effects on a single polysemous token.",
+        "caption": "Figure 4. Deep dive analysis of the token \"light\" showing (a) cluster trajectories, (b) context-to-cluster mapping, (c) divergence accumulation, and (d) summary statistics.",
+        "files": {
+          "png": "results_paper\\publication_figures\\single_token_showcase.png",
+          "pdf": "results_paper\\publication_figures\\single_token_showcase.pdf"
+        }
+      },
+      "transformation_geometry": {
+        "description": "Geometric visualization of context-induced transformations.",
+        "caption": "Figure 5. Procrustes transformation visualizations showing how different contexts geometrically transform the representation space through rotation, scaling, and translation.",
+        "files": {
+          "png": "results_paper\\publication_figures\\transformation_geometry.png",
+          "pdf": "results_paper\\publication_figures\\transformation_geometry.pdf"
+        }
+      },
+      "layer_evolution": {
+        "description": "Evolution of transformation metrics across network layers.",
+        "caption": "Figure 6. Layer-wise evolution of (a) entropy reduction, (b) trajectory divergence, (c) cluster stability, and (d) mutual information between context and clusters.",
+        "files": {
+          "png": "results_paper\\publication_figures\\layer_evolution.png",
+          "pdf": "results_paper\\publication_figures\\layer_evolution.pdf"
+        }
+      }
+    }
+  }
+}

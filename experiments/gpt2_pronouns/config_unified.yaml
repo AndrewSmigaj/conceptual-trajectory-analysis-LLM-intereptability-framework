@@ -1,0 +1,50 @@
+# Unified Context Effects Experiment Configuration
+
+experiment:
+  name: "gpt2_unified_context_effects"
+  description: "Analyze context effects on token trajectories using unified clustering"
+  output_dir: "./results_unified/"
+
+model:
+  name: "gpt2"
+  type: "transformer"
+  num_layers: 12
+  hidden_size: 768
+  
+analysis:
+  # Clustering parameters
+  k_clusters: 20  # More clusters for finer-grained analysis
+  
+  # Focus on early layers where effects are strongest
+  early_layers: [0, 1, 2, 3]
+  all_layers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+  
+  # Window definitions for trajectory analysis
+  windows:
+    early: [0, 1, 2, 3]
+    middle: [4, 5, 6, 7]
+    late: [8, 9, 10, 11]
+
+data:
+  # Test cases file
+  test_cases_path: "test_cases_unified.json"
+  
+  # Selected tokens file  
+  tokens_path: "selected_tokens_unified.json"
+  
+  # Batch processing
+  batch_size: 32
+  
+output:
+  # Checkpointing
+  checkpoint_interval: 500
+  
+  # What to save
+  save_activations: true
+  save_trajectories: true
+  save_cluster_models: true
+  
+  # Visualization parameters
+  generate_sankey: true
+  generate_heatmaps: true
+  generate_statistics: true

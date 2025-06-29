@@ -1,0 +1,137 @@
+\begin{thebibliography}{20}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Smigaj(2024)]{smigaj2024cta}
+Andrew Smigaj.
+\newblock Concept trajectory analysis: Interpretable neural networks through
+  layer-wise concept trajectories.
+\newblock Manuscript in preparation. Institute of Discordant Colony
+  Optimization, 2024.
+
+\bibitem[Mikolov et~al.(2013)Mikolov, Chen, Corrado, and
+  Dean]{mikolov2013word2vec}
+Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean.
+\newblock Efficient estimation of word representations in vector space.
+\newblock \emph{arXiv preprint arXiv:1301.3781}, 2013.
+
+\bibitem[Pennington et~al.(2014)Pennington, Socher, and
+  Manning]{pennington2014glove}
+Jeffrey Pennington, Richard Socher, and Christopher~D Manning.
+\newblock Glove: Global vectors for word representation.
+\newblock In \emph{Proceedings of the 2014 conference on empirical methods in
+  natural language processing (EMNLP)}, pages 1532--1543, 2014.
+
+\bibitem[Peters et~al.(2018)Peters, Neumann, Iyyer, Gardner, Clark, Lee, and
+  Zettlemoyer]{peters2018elmo}
+Matthew~E Peters, Mark Neumann, Mohit Iyyer, Matt Gardner, Christopher Clark,
+  Kenton Lee, and Luke Zettlemoyer.
+\newblock Deep contextualized word representations.
+\newblock In \emph{Proceedings of NAACL-HLT}, pages 2227--2237, 2018.
+
+\bibitem[Devlin et~al.(2019)Devlin, Chang, Lee, and Toutanova]{devlin2019bert}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+\newblock Bert: Pre-training of deep bidirectional transformers for language
+  understanding.
+\newblock In \emph{Proceedings of NAACL-HLT}, pages 4171--4186, 2019.
+
+\bibitem[Radford et~al.(2018)Radford, Narasimhan, Salimans, and
+  Sutskever]{radford2018gpt}
+Alec Radford, Karthik Narasimhan, Tim Salimans, and Ilya Sutskever.
+\newblock Improving language understanding by generative pre-training.
+\newblock \emph{OpenAI Blog}, 2018.
+
+\bibitem[Radford et~al.(2019)Radford, Wu, Child, Luan, Amodei, and
+  Sutskever]{radford2019gpt2}
+Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, and Ilya
+  Sutskever.
+\newblock Language models are unsupervised multitask learners.
+\newblock \emph{OpenAI Blog}, 1\penalty0 (8):\penalty0 9, 2019.
+
+\bibitem[Tenney et~al.(2019)Tenney, Das, and Pavlick]{tenney2019bert}
+Ian Tenney, Dipanjan Das, and Ellie Pavlick.
+\newblock Bert rediscovers the classical nlp pipeline.
+\newblock In \emph{Proceedings of the 57th Annual Meeting of the Association
+  for Computational Linguistics}, pages 4593--4601, 2019.
+
+\bibitem[Rogers et~al.(2020)Rogers, Kovaleva, and Rumshisky]{rogers2020primer}
+Anna Rogers, Olga Kovaleva, and Anna Rumshisky.
+\newblock A primer on neural network architectures for natural language
+  processing.
+\newblock \emph{Transactions of the Association for Computational Linguistics},
+  8:\penalty0 842--866, 2020.
+
+\bibitem[Conneau et~al.(2018)Conneau, Kruszewski, Lample, Barrault, and
+  Baroni]{conneau2018probing}
+Alexis Conneau, German Kruszewski, Guillaume Lample, Lo{\"\i}c Barrault, and
+  Marco Baroni.
+\newblock What you can cram into a single vector: Probing sentence embeddings
+  for linguistic properties.
+\newblock \emph{arXiv preprint arXiv:1805.01070}, 2018.
+
+\bibitem[Hewitt and Manning(2019)]{hewitt2019structural}
+John Hewitt and Christopher~D Manning.
+\newblock A structural probe for finding syntax in word representations.
+\newblock In \emph{Proceedings of NAACL-HLT}, pages 4129--4138, 2019.
+
+\bibitem[Reif et~al.(2019)Reif, Yuan, Wattenberg, Viegas, Coenen, Pearce, and
+  Kim]{reif2019visualizing}
+Emily Reif, Ann Yuan, Martin Wattenberg, Fernanda~B Viegas, Andy Coenen, Adam
+  Pearce, and Been Kim.
+\newblock Visualizing and measuring the geometry of bert.
+\newblock \emph{Advances in Neural Information Processing Systems}, 32, 2019.
+
+\bibitem[Saphra and Lopez(2019)]{saphra2019understanding}
+Naomi Saphra and Adam Lopez.
+\newblock Understanding learning dynamics of language models with svcca.
+\newblock In \emph{Proceedings of NAACL-HLT}, pages 3257--3267, 2019.
+
+\bibitem[Voita et~al.(2019)Voita, Sennrich, and Titov]{voita2019bottom}
+Elena Voita, Rico Sennrich, and Ivan Titov.
+\newblock The bottom-up evolution of representations in the transformer: A
+  study with machine translation and language modeling objectives.
+\newblock \emph{arXiv preprint arXiv:1909.01380}, 2019.
+
+\bibitem[Ethayarajh(2019)]{ethayarajh2019contextual}
+Kawin Ethayarajh.
+\newblock How contextual are contextualized word representations?
+\newblock In \emph{Proceedings of the 2019 Conference on Empirical Methods in
+  Natural Language Processing}, pages 55--65, 2019.
+
+\bibitem[Bronstein et~al.(2021)Bronstein, Bruna, Cohen, and
+  Veli{\v{c}}kovi{\'c}]{bronstein2021geometric}
+Michael~M Bronstein, Joan Bruna, Taco Cohen, and Petar Veli{\v{c}}kovi{\'c}.
+\newblock Geometric deep learning: Grids, groups, graphs, geodesics, and
+  gauges.
+\newblock \emph{arXiv preprint arXiv:2104.13478}, 2021.
+
+\bibitem[Kornblith et~al.(2019)Kornblith, Norouzi, Lee, and
+  Hinton]{kornblith2019similarity}
+Simon Kornblith, Mohammad Norouzi, Honglak Lee, and Geoffrey Hinton.
+\newblock Similarity of neural network representations revisited.
+\newblock In \emph{International Conference on Machine Learning}, pages
+  3519--3529, 2019.
+
+\bibitem[Williams et~al.(2021)Williams, Kunz, Kornblith, and
+  Linderman]{williams2021generalized}
+Alex~H Williams, Erin Kunz, Simon Kornblith, and Scott~W Linderman.
+\newblock Generalized shape metrics on neural representations.
+\newblock \emph{Advances in Neural Information Processing Systems}, 34, 2021.
+
+\bibitem[Voita and Titov(2020)]{voita2020information}
+Elena Voita and Ivan Titov.
+\newblock Information-theoretic probing with minimum description length.
+\newblock In \emph{Proceedings of the 2020 Conference on Empirical Methods in
+  Natural Language Processing}, pages 183--196, 2020.
+
+\bibitem[Pimentel et~al.(2020)Pimentel, Valvoda, Maudslay, Zmigrod, Williams,
+  and Cotterell]{pimentel2020information}
+Tiago Pimentel, Josef Valvoda, Rowan~Hall Maudslay, Ran Zmigrod, Adina
+  Williams, and Ryan Cotterell.
+\newblock Information-theoretic probing for linguistic structure.
+\newblock \emph{arXiv preprint arXiv:2004.03061}, 2020.
+
+\end{thebibliography}

@@ -1,0 +1,119 @@
+% Methods Section for Context Transformation Paper
+
+\section{Methods}
+
+\subsection{Transformation Analysis Framework}
+
+We developed a comprehensive transformation analysis framework to systematically study context-induced changes in token representations. The framework implements 17 complementary analyses, each targeting different aspects of the transformation phenomenon. All code is available at [repository URL].
+
+\subsubsection{Core Infrastructure}
+
+The framework follows a unified pipeline: data loading → validation → analysis → standardized output. Each analysis extends a \texttt{BaseTransformationAnalysis} class ensuring consistent:
+\begin{itemize}
+\item Data loading with LRU caching for efficiency
+\item Validation of inputs and outputs
+\item JSON and pickle serialization
+\item Comprehensive logging and error handling
+\end{itemize}
+
+\subsubsection{Data Preparation}
+
+We analyzed 1,000 tokens from GPT-2's vocabulary, selected to span different frequencies and linguistic types. For each token, we extracted activation trajectories across all 12 layers under 10 different context conditions:
+\begin{itemize}
+\item Baseline (no context)
+\item Determiners: "the", "a"
+\item Copula: "is"
+\item Modal: "will"
+\item Possessive: "my"
+\item Conjunction: "and"
+\item Negation: "not"
+\item Intensifier: "very"
+\item Sentence start position
+\end{itemize}
+
+Trajectories were obtained by clustering activations at each layer using k-means (k=10), validated through stability analysis across multiple random seeds.
+
+\subsection{Analysis Components}
+
+\subsubsection{Transition Matrix Analysis}
+We constructed transition matrices $T_{c,l}$ for each context $c$ and layer $l$, where $T_{c,l}[i,j]$ represents the probability of transitioning from cluster $i$ to cluster $j$. For each matrix, we calculated:
+\begin{itemize}
+\item Entropy: $H = -\sum_{i,j} T[i,j] \log_2 T[i,j]$
+\item Sparsity: $S = 1 - \frac{|\{T[i,j] : T[i,j] > 0\}|}{k^2}$
+\item Mutual information between source and destination clusters
+\item Diagonal dominance (self-transition probability)
+\end{itemize}
+
+\subsubsection{Statistical Validation}
+\textbf{Random Baselines:} We compared observed transitions against three random baseline types:
+\begin{enumerate}
+\item Shuffle: Random permutation of cluster assignments
+\item Permute: Random transitions preserving marginal distributions
+\item Uniform: Uniformly random transitions
+\end{enumerate}
+
+\textbf{Permutation Testing:} For each context and layer, we performed 1,000 permutations to test whether observed patterns differed from chance. P-values were corrected using False Discovery Rate (FDR) with $q < 0.05$.
+
+\textbf{Effect Sizes:} We calculated standardized effect sizes:
+\begin{itemize}
+\item Cohen's $d$ for continuous metrics
+\item Hedge's $g$ for small sample corrections
+\item Cliff's $\delta$ for non-parametric comparisons
+\end{itemize}
+
+\subsubsection{Information Theory Metrics}
+We quantified information content using:
+\begin{itemize}
+\item Mutual information: $I(Context; Transformation)$
+\item KL divergence: $D_{KL}(P_{context} || P_{baseline})$
+\item Jensen-Shannon divergence for symmetric comparisons
+\item Conditional entropy: $H(Cluster|Context)$
+\end{itemize}
+
+\subsubsection{Geometric Analysis}
+Procrustes analysis decomposed transformations into geometric components:
+\begin{equation}
+\min_{R,s,t} ||sXR + t - Y||_F^2
+\end{equation}
+where $R$ is rotation, $s$ is scaling, and $t$ is translation.
+
+\subsubsection{Predictive Modeling}
+We trained machine learning models to predict transformation patterns from token features:
+\begin{itemize}
+\item Features: token frequency, type, length, linguistic properties
+\item Models: Random Forest, Gradient Boosting, SVM
+\item Evaluation: 5-fold cross-validation with stratification
+\end{itemize}
+
+\subsection{Bootstrap Confidence Intervals}
+
+All metrics include 95\% confidence intervals from 1,000 bootstrap samples. The bootstrap procedure:
+\begin{enumerate}
+\item Resample tokens with replacement
+\item Recalculate metric on bootstrap sample
+\item Repeat 1,000 times
+\item Use percentile method for CI bounds
+\end{enumerate}
+
+\subsection{Computational Details}
+
+Analyses were performed on a system with:
+\begin{itemize}
+\item GPT-2 (124M parameters) from HuggingFace Transformers
+\item PyTorch 2.0 for activation extraction
+\item Scikit-learn for clustering and ML models
+\item SciPy for statistical tests
+\item NumPy/Pandas for data manipulation
+\end{itemize}
+
+The complete pipeline processes 1,000 tokens × 10 contexts × 12 layers = 120,000 trajectory points in approximately 2 hours on a single GPU.
+
+\subsection{Visualization}
+
+Publication figures were generated at 300 DPI using Matplotlib with Nature/Science styling guidelines. Interactive visualizations use Plotly for exploration. All figures include:
+\begin{itemize}
+\item Error bars from bootstrap confidence intervals
+\item Consistent color scheme for contexts
+\item Clear axis labels and legends
+\item Statistical significance indicators where applicable
+\end{itemize}

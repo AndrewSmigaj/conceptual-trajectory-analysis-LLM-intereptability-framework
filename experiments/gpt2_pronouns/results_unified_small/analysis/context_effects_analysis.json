@@ -1,0 +1,195 @@
+{
+  "context_effects": {
+    "determiner_the": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 162,
+      "strong_effects": 162,
+      "mean_bifurcation_layer": 0.0
+    },
+    "determiner_a": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 162,
+      "strong_effects": 162,
+      "mean_bifurcation_layer": 0.0
+    },
+    "possessive_my": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 162,
+      "strong_effects": 162,
+      "mean_bifurcation_layer": 0.0
+    },
+    "copula_is": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 167,
+      "strong_effects": 167,
+      "mean_bifurcation_layer": 0.0
+    },
+    "intensifier_very": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 161,
+      "strong_effects": 161,
+      "mean_bifurcation_layer": 0.0
+    },
+    "negation_not": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 167,
+      "strong_effects": 167,
+      "mean_bifurcation_layer": 0.0
+    },
+    "conjunction_and": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 167,
+      "strong_effects": 167,
+      "mean_bifurcation_layer": 0.0
+    },
+    "modal_will": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 167,
+      "strong_effects": 167,
+      "mean_bifurcation_layer": 0.0
+    },
+    "sentence_start": {
+      "mean_divergence": 1.0,
+      "std_divergence": 0.0,
+      "max_divergence": 1.0,
+      "mean_early_divergence": 1.0,
+      "tokens_affected": 167,
+      "strong_effects": 167,
+      "mean_bifurcation_layer": 0.0
+    }
+  },
+  "ranked_contexts": [
+    [
+      "determiner_the",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 162,
+        "strong_effects": 162,
+        "mean_bifurcation_layer": 0.0
+      }
+    ],
+    [
+      "determiner_a",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 162,
+        "strong_effects": 162,
+        "mean_bifurcation_layer": 0.0
+      }
+    ],
+    [
+      "possessive_my",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 162,
+        "strong_effects": 162,
+        "mean_bifurcation_layer": 0.0
+      }
+    ],
+    [
+      "copula_is",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 167,
+        "strong_effects": 167,
+        "mean_bifurcation_layer": 0.0
+      }
+    ],
+    [
+      "intensifier_very",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 161,
+        "strong_effects": 161,
+        "mean_bifurcation_layer": 0.0
+      }
+    ],
+    [
+      "negation_not",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 167,
+        "strong_effects": 167,
+        "mean_bifurcation_layer": 0.0
+      }
+    ],
+    [
+      "conjunction_and",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 167,
+        "strong_effects": 167,
+        "mean_bifurcation_layer": 0.0
+      }
+    ],
+    [
+      "modal_will",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 167,
+        "strong_effects": 167,
+        "mean_bifurcation_layer": 0.0
+      }
+    ],
+    [
+      "sentence_start",
+      {
+        "mean_divergence": 1.0,
+        "std_divergence": 0.0,
+        "max_divergence": 1.0,
+        "mean_early_divergence": 1.0,
+        "tokens_affected": 167,
+        "strong_effects": 167,
+        "mean_bifurcation_layer": 0.0
+      }
+    ]
+  ]
+}

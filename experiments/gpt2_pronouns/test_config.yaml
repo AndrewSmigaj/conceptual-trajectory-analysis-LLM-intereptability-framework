@@ -1,0 +1,93 @@
+analysis:
+  all_layers:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  clustering:
+    k_per_layer: 10
+    labels_path: ../gpt2/all_tokens/clustering_results_k10/all_labels_k10.json
+    method: existing_k10
+    model_path: ../gpt2/all_tokens/clustering_results_k10/
+  early_layers:
+  - 0
+  - 1
+  - 2
+  - 3
+  windows:
+    early:
+    - 0
+    - 1
+    - 2
+    - 3
+    late:
+    - 8
+    - 9
+    - 10
+    - 11
+    middle:
+    - 4
+    - 5
+    - 6
+    - 7
+data:
+  batch_size: 50
+  context_frames:
+    baseline: '[TOKEN]'
+    determiner_a: a [TOKEN]
+    determiner_the: the [TOKEN]
+    preposition_of: of [TOKEN]
+    preposition_with: with [TOKEN]
+    pronoun_i: I [TOKEN]
+    pronoun_they: they [TOKEN]
+    sentence_start_are: '[TOKEN] are'
+    sentence_start_is: '[TOKEN] is'
+  max_examples: 100000
+  token_list_path: ../gpt2/all_tokens/top_10k_tokens_full.json
+experiment:
+  description: Analyze how context affects routing for all 10k most frequent GPT-2
+    tokens
+  name: gpt2_small_test
+  output_dir: ./test_results/
+metrics:
+  path_analysis:
+    compute_path_entropy: true
+    identify_bifurcation_point: true
+    track_path_stability: true
+  tds:
+    compute_early: true
+    compute_full: true
+model:
+  hidden_size: 768
+  name: gpt2
+  num_layers: 12
+  type: transformer
+output:
+  checkpoint_interval: 5000
+  figure_format: pdf
+  generate_figures: true
+  generate_latex_tables: true
+  save_activations: false
+  save_context_effects: true
+  save_llm_analysis: true
+  save_trajectories: true
+  save_trajectory_summary: true
+visualization:
+  sankey:
+    height: 800
+    show_selected_only: true
+    top_n_paths: 50
+    width: 1600
+  statistical_plots:
+    bifurcation_analysis: true
+    context_effect_distributions: true
+    token_stability_rankings: true
+    trajectory_heatmaps: true

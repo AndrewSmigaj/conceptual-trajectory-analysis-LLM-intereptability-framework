@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Unified Transformation Analysis Output Schema",
+  "description": "Standard output format for all GPT-2 context transformation analyses",
+  "type": "object",
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "description": "Analysis metadata and configuration",
+      "properties": {
+        "analysis_type": {
+          "type": "string",
+          "description": "Type of analysis performed"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "string",
+          "description": "Schema version"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Analysis-specific parameters"
+        }
+      },
+      "required": ["analysis_type", "timestamp", "version"]
+    },
+    "data": {
+      "type": "object",
+      "description": "Main analysis results",
+      "properties": {
+        "transition_matrices": {
+          "type": "object",
+          "description": "Context-specific transition matrices by layer",
+          "patternProperties": {
+            "^layer_\\d+$": {
+              "type": "object",
+              "patternProperties": {
+                "^\\w+$": {
+                  "type": "array",
+                  "description": "10x10 transition matrix for context type",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "transformation_matrices": {
+          "type": "object",
+          "description": "Linear transformation matrices T where context_activation ≈ T·baseline",
+          "patternProperties": {
+            "^layer_\\d+$": {
+              "type": "object",
+              "patternProperties": {
+                "^\\w+$": {
+                  "type": "object",
+                  "properties": {
+                    "matrix": {
+                      "type": "array",
+                      "description": "Transformation matrix"
+                    },
+                    "quality_metrics": {
+                      "type": "object",
+                      "properties": {
+                        "r2_score": {"type": "number"},
+                        "mse": {"type": "number"},
+                        "cosine_similarity": {"type": "number"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "stability_metrics": {
+          "type": "object",
+          "description": "Clustering stability across random seeds",
+          "properties": {
+            "by_layer": {
+              "type": "object",
+              "patternProperties": {
+                "^layer_\\d+$": {
+                  "type": "object",
+                  "properties": {
+                    "mean_ari": {"type": "number"},
+                    "std_ari": {"type": "number"},
+                    "transition_variance": {"type": "number"}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "predictive_results": {
+          "type": "object",
+          "description": "Results from predictive modeling",
+          "properties": {
+            "accuracy": {"type": "number"},
+            "confusion_matrix": {"type": "array"},
+            "per_context_accuracy": {"type": "object"},
+            "feature_importance": {"type": "array"}
+          }
+        }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "description": "Statistical test results and metrics",
+      "properties": {
+        "significance_tests": {
+          "type": "object",
+          "properties": {
+            "permutation_p_values": {
+              "type": "object",
+              "description": "P-values from permutation tests by layer and context"
+            },
+            "corrected_p_values": {
+              "type": "object",
+              "description": "Multiple testing corrected p-values"
+            }
+          }
+        },
+        "effect_sizes": {
+          "type": "object",
+          "properties": {
+            "cohens_d": {
+              "type": "object",
+              "description": "Cohen's d effect sizes by comparison"
+            },
+            "confidence_intervals": {
+              "type": "object",
+              "description": "Bootstrap confidence intervals"
+            }
+          }
+        },
+        "information_metrics": {
+          "type": "object",
+          "properties": {
+            "mutual_information": {"type": "object"},
+            "entropy": {"type": "object"},
+            "kl_divergence": {"type": "object"}
+          }
+        }
+      }
+    },
+    "stratification": {
+      "type": "object",
+      "description": "Results stratified by token properties",
+      "properties": {
+        "by_frequency": {
+          "type": "object",
+          "properties": {
+            "high": {"type": "object"},
+            "medium": {"type": "object"},
+            "low": {"type": "object"}
+          }
+        },
+        "by_type": {
+          "type": "object",
+          "properties": {
+            "function": {"type": "object"},
+            "content": {"type": "object"},
+            "subword": {"type": "object"}
+          }
+        }
+      }
+    },
+    "visualizations": {
+      "type": "object",
+      "description": "References to generated visualizations",
+      "properties": {
+        "figures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string"},
+              "path": {"type": "string"},
+              "type": {"type": "string"},
+              "description": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "High-level summary and key findings",
+      "properties": {
+        "key_findings": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "interpretation": {"type": "string"},
+        "next_steps": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    }
+  },
+  "required": ["metadata", "data", "statistics", "summary"]
+}

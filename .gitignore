@@ -213,3 +213,34 @@ temp/
 wandb/
 mlruns/
 lightning_logs/
+
+# Generated JSON files (often large)
+**/generated_*.json
+**/results_*.json
+**/output_*.json
+**/cached_*.json
+**/processed_*.json
+**/analysis_*.json
+**/trajectory_*.json
+**/clustering_*.json
+**/visualization_*.json
+**/trajectories_*.json
+**/unified_trajectories*.json
+**/llm_analysis_*.json
+**/semantic_*.json
+**/archetypal_*.json
+**/divergence_*.json
+**/sankey_*.json
+**/path_*.json
+**/transition_*.json
+**/stratified_*.json
+**/paper_*.json
+**/test_*.json
+**/experiment_*.json
+**/hyperparameter_*.json
+**/error_*.json
+**/cross_validation_*.json
+**/statistical_*.json
+# Large cache files
+**/cache/**/*.json
+archive/**/*.json

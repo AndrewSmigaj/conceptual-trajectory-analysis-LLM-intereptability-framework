@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+"""
+Run remaining transformation analyses on unified clustering data.
+
+This script runs the analyses that haven't completed yet:
+- linguistic_grouping
+- effect_sizes  
+- validation_suite
+"""
+
+import os
+import sys
+import json
+import logging
+from pathlib import Path
+from datetime import datetime
+
+# Add parent directory to path
+sys.path.append(str(Path(__file__).parent.parent))
+
+# Import remaining analysis classes
+from transformation_analysis.linguistic_grouping_analysis import LinguisticGroupingAnalysis
+from transformation_analysis.effect_size_calculator import EffectSizeCalculator
+from transformation_analysis.comprehensive_validation_suite import ComprehensiveValidationSuite
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(f'remaining_analyses_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+
+def run_analysis(analysis_class, name, config=None):
+    """Run a single analysis and handle errors."""
+    logger.info(f"\n{'='*60}")
+    logger.info(f"Running {name}")
+    logger.info(f"{'='*60}")
+    
+    try:
+        # Create output directory for this analysis
+        output_dir = f"results_transformation/{name}"
+        
+        # Initialize and run
+        analysis = analysis_class(output_dir=output_dir, config=config)
+        output = analysis.run()
+        
+        logger.info(f"[SUCCESS] {name} completed successfully")
+        logger.info(f"  Output saved to: {output_dir}")
+        
+        # Log key statistics if available
+        if hasattr(output, 'statistics') and output.statistics:
+            logger.info(f"  Key statistics:")
+            for key, value in output.statistics.items():
+                if isinstance(value, (int, float)):
+                    logger.info(f"    - {key}: {value:.4f}")
+                    
+        return True, output
+        
+    except Exception as e:
+        logger.error(f"[FAILED] {name} failed with error: {str(e)}")
+        logger.exception(e)
+        return False, None
+
+
+def main():
+    """Run remaining analyses on unified data."""
+    logger.info("Starting remaining transformation analyses")
+    logger.info(f"Timestamp: {datetime.now()}")
+    
+    # Check that unified data exists
+    unified_data_path = Path("../results_unified/unified_trajectories_k10.json")
+    if not unified_data_path.exists():
+        logger.error(f"Unified data not found at {unified_data_path}")
+        return
+        
+    logger.info(f"Using unified data from: {unified_data_path}")
+    
+    # Define remaining analyses
+    analyses = [
+        (LinguisticGroupingAnalysis, "linguistic_grouping", {
+            'k_clusters': 10,  # Add missing k parameter
+            'grouping_properties': ['pos_tag', 'token_type', 'frequency_bin'],
+            'min_group_size': 10,
+            'context_types': ['determiner_the', 'copula_is', 'modal_will']
+        }),
+        
+        (EffectSizeCalculator, "effect_sizes", {
+            'effect_size_types': ['cohens_d', 'cliffs_delta'],
+            'comparisons': {
+                'contexts': ['baseline', 'determiner_the', 'copula_is'],
+                'stratify_by': ['frequency', 'type']
+            }
+        }),
+        
+        (ComprehensiveValidationSuite, "validation_suite", {
+            'k_values': [5, 10, 15, 20],
+            'clustering_methods': ['kmeans', 'hierarchical'],  # Skip DBSCAN for speed
+            'normalization_methods': ['none', 'standard'],  # Reduced for speed
+            'n_samples': 500  # Smaller subsample for efficiency
+        })
+    ]
+    
+    # Run analyses
+    results = {}
+    successful = 0
+    failed = 0
+    
+    for analysis_class, name, config in analyses:
+        success, output = run_analysis(analysis_class, name, config)
+        if success:
+            successful += 1
+            results[name] = output
+        else:
+            failed += 1
+    
+    # Summary
+    logger.info(f"\n{'='*60}")
+    logger.info("ANALYSIS SUMMARY")
+    logger.info(f"{'='*60}")
+    logger.info(f"Total analyses: {len(analyses)}")
+    logger.info(f"Successful: {successful}")
+    logger.info(f"Failed: {failed}")
+    logger.info(f"Success rate: {successful/len(analyses)*100:.1f}%")
+    
+    # Save summary
+    summary_path = f"results_transformation/remaining_analyses_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    summary = {
+        'timestamp': datetime.now().isoformat(),
+        'n_analyses': len(analyses),
+        'successful': successful,
+        'failed': failed,
+        'analyses_run': [name for _, name, _ in analyses]
+    }
+    
+    with open(summary_path, 'w') as f:
+        json.dump(summary, f, indent=2)
+    
+    logger.info(f"\nSummary saved to: {summary_path}")
+    logger.info("Remaining analyses complete!")
+
+
+if __name__ == "__main__":
+    main()

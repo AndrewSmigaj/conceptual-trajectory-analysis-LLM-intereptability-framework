@@ -1,0 +1,93 @@
+# GPT-2 Full Vocabulary Context Effects Analysis Configuration
+
+experiment:
+  name: "gpt2_full_vocabulary_context_effects"
+  description: "Analyze how context affects routing for all 10k most frequent GPT-2 tokens"
+  output_dir: "./results/"
+
+model:
+  name: "gpt2"
+  type: "transformer"
+  num_layers: 12
+  hidden_size: 768
+  
+analysis:
+  # Focus on first 4 layers where bifurcation typically occurs
+  early_layers: [0, 1, 2, 3]
+  all_layers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+  
+  # Use existing k10 clustering from original GPT-2 study
+  clustering:
+    method: "existing_k10"
+    k_per_layer: 10
+    model_path: "../gpt2/all_tokens/clustering_results_k10/"
+    labels_path: "../gpt2/all_tokens/clustering_results_k10/all_labels_k10.json"
+    
+  # Window definitions for CTA
+  windows:
+    early: [0, 1, 2, 3]
+    middle: [4, 5, 6, 7] 
+    late: [8, 9, 10, 11]
+
+data:
+  # Full 10k vocabulary
+  token_list_path: "../gpt2/all_tokens/top_10k_tokens_full.json"
+  
+  # Context frames to test different linguistic contexts
+  context_frames:
+    baseline: "[TOKEN]"  # Token alone
+    determiner_the: "the [TOKEN]"
+    determiner_a: "a [TOKEN]"
+    pronoun_i: "I [TOKEN]"
+    pronoun_they: "they [TOKEN]"
+    preposition_with: "with [TOKEN]"
+    preposition_of: "of [TOKEN]"
+    sentence_start_is: "[TOKEN] is"
+    sentence_start_are: "[TOKEN] are"
+    
+  # Batch processing parameters
+  batch_size: 1000
+  max_examples: 100000  # 10k tokens × 9 contexts = 90k examples
+
+metrics:
+  # Trajectory Divergence Score parameters
+  tds:
+    compute_early: true  # First 4 layers only
+    compute_full: true   # All 12 layers
+    
+  # Path analysis
+  path_analysis:
+    identify_bifurcation_point: true
+    track_path_stability: true
+    compute_path_entropy: true
+
+visualization:
+  # Sankey diagram parameters (for selected examples only)
+  sankey:
+    show_selected_only: true  # Show sankeys for interesting cases
+    top_n_paths: 50
+    height: 800
+    width: 1600
+    
+  # Statistical visualizations for full dataset
+  statistical_plots:
+    trajectory_heatmaps: true
+    context_effect_distributions: true
+    bifurcation_analysis: true
+    token_stability_rankings: true
+
+output:
+  # Save intermediate results
+  save_activations: false  # Don't save raw activations (too large for 90k examples)
+  save_trajectories: true
+  save_trajectory_summary: true  # Aggregated statistics
+  save_context_effects: true
+  save_llm_analysis: true
+  
+  # Batch processing checkpoints
+  checkpoint_interval: 5000  # Save progress every 5000 examples
+  
+  # Paper-ready outputs
+  generate_latex_tables: true
+  generate_figures: true
+  figure_format: "pdf"

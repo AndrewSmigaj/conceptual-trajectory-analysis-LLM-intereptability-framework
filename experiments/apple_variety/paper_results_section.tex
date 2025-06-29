@@ -1,0 +1,64 @@
+% Apple Quality Routing Case Study
+% This section can be integrated into the main paper's experimental results
+
+\subsection{Case Study: Apple Quality Routing in Agricultural AI}
+
+To demonstrate CTA's applicability beyond language models, we analyzed a neural network trained for apple quality routing—a critical agricultural decision with significant economic implications. This case study illustrates how CTA reveals the consolidation of complex quality assessments into simplified routing decisions.
+
+\subsubsection{Experimental Setup}
+
+We created a realistic synthetic dataset of 1,320 apple samples representing 15 commercial varieties, with quality features derived from USDA grading standards. Each apple was characterized by five physical measurements (sugar content, firmness, starch level, size, and harvest season) plus variety identity, yielding a 20-dimensional input space after one-hot encoding. Samples were labeled with routing decisions: fresh premium (327 samples), fresh standard (786 samples), or juice grade (207 samples), reflecting real market distributions with a 3.8:1 class imbalance.
+
+A feedforward neural network with architecture [20-128-64-32-3] was trained using cross-entropy loss with class weights to handle imbalance. The model achieved 92.8\% test accuracy after 108 epochs with early stopping, demonstrating successful learning of variety-specific routing patterns.
+
+\subsubsection{Trajectory Analysis Results}
+
+CTA revealed striking patterns of conceptual convergence through the network layers:
+
+\textbf{Layer 0 (Input):} The network initially organized apples into 10 distinct clusters based on variety and quality characteristics. Cluster compositions reflected meaningful quality groupings: "Premium-Leaning" (68 samples, 32\% premium rate), "Standard Dominant" (220 samples, 69\% standard rate), and "Lower Quality" (39 samples, 26\% juice rate).
+
+\textbf{Layers 1-3:} Rapid convergence occurred, with clusters reducing from 10→2→2→2 across layers. By layer 1, 90.6\% of samples had converged to a single "majority flow" cluster, while 9.4\% followed specialized "minority" pathways. This 80\% reduction in cluster count demonstrates how the network compresses diverse quality signals into binary routing logic.
+
+\textbf{Trajectory Patterns:} Analysis identified 13 unique paths through the network, with the dominant pattern [*, 1, 1, 1] (where * represents any initial cluster) accounting for 90.6\% of samples. This convergence suggests the network learns general routing rules that apply across varieties, with initial clusters serving primarily to capture variety-specific calibrations.
+
+\subsubsection{Economic Impact Analysis}
+
+By incorporating market prices (premium: \$2.80/lb, standard: \$1.75/lb, juice: \$0.06/lb), CTA quantified the economic consequences of routing decisions. Misclassification to juice grade resulted in \$186.41 total loss across 133 training samples (\$1.40 per apple). Premium apples misrouted to juice incurred losses of \$2.74/lb, while standard apples lost \$1.69/lb.
+
+Variety-specific analysis revealed patterns aligned with market realities:
+\begin{itemize}
+    \item Historical varieties showed high juice routing: Red Delicious (93.1\%), McIntosh (100\%), Cortland (100\%)
+    \item Premium varieties maintained quality: Honeycrisp (1.5\% juice), Jazz (2.4\% juice), Cosmic Crisp (0\% juice)
+    \item Standard varieties showed intermediate patterns: Gala (11.3\% juice), Fuji (1.0\% juice)
+\end{itemize}
+
+These results validate that the network captures real economic distinctions between varieties, with trajectory analysis exposing how these distinctions manifest in processing patterns.
+
+\subsubsection{Interpretability Through Semantic Labels}
+
+The D3.js Sankey visualizations with semantic cluster labels revealed the conceptual flow at each stage:
+
+\begin{figure}[h]
+\centering
+% Include D3 Sankey diagram here
+\caption{Apple routing trajectories through network layers. Initial diversity (10 clusters) rapidly converges to binary processing paths, with 90.6\% following the "majority flow" and 9.4\% taking specialized routes. Colors indicate routing outcomes: green (premium), blue (standard), red (juice).}
+\label{fig:apple_sankey}
+\end{figure}
+
+Early layers preserve variety-specific information (e.g., "Premium-Leaning: 68 samples"), while later layers consolidate to functional categories ("Majority Flow: 765 samples" vs. "Minority Patterns: 79 samples"). This semantic labeling makes the network's decision process interpretable to domain experts.
+
+\subsubsection{Implications for Agricultural AI}
+
+The apple routing case study demonstrates CTA's value for agricultural AI systems:
+
+\begin{enumerate}
+    \item \textbf{Quality Assessment Transparency:} CTA reveals how neural networks compress complex quality measurements into routing decisions, enabling validation against domain expertise.
+    
+    \item \textbf{Economic Impact Quantification:} By tracking trajectories of misclassified samples, stakeholders can identify which varieties and quality profiles incur the highest economic losses.
+    
+    \item \textbf{Variety-Specific Insights:} The preservation of variety information in early clusters before convergence suggests the network learns variety-specific calibrations before applying general routing rules.
+    
+    \item \textbf{Model Debugging:} Minority pathways (9.4\% of samples) may represent edge cases requiring special handling or additional training data.
+\end{enumerate}
+
+This analysis showcases how CTA extends beyond language models to provide actionable insights in domains with clear economic consequences. The method's ability to combine trajectory analysis with semantic labeling and economic impact assessment makes neural networks more trustworthy for high-stakes agricultural decisions.

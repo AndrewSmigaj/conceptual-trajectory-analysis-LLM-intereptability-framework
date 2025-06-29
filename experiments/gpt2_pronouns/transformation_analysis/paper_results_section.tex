@@ -1,0 +1,81 @@
+% Results Section for Context Transformation Paper
+
+\section{Results}
+
+\subsection{Context Creates Systematic Transformations}
+
+Our analysis of 1,000 GPT-2 tokens across 9 linguistic contexts reveals that context-induced transformations follow systematic, predictable patterns rather than random perturbations. Figure~\ref{fig:trajectory_fan} illustrates the characteristic divergence patterns, showing how tokens initially following similar trajectories diverge predictably based on the preceding context.
+
+\begin{table}[h]
+\centering
+\caption{Context transformation characteristics in GPT-2}
+\label{tab:metrics}
+\begin{tabular}{lc}
+\hline
+Metric & Value \\
+\hline
+Transition entropy (bits) & $1.58 \pm 0.48$ \\
+Transition sparsity & $0.38 \pm 0.12$ \\
+Sparsity vs. random & $17.5\%$ sparser \\
+Mutual information & $0.319$ \\
+Diagonal dominance & $0.000$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Transformations Are Sparse and Structured}
+
+The transition matrices between consecutive layers exhibit remarkably low entropy (1.58 $\pm$ 0.48 bits), far below the theoretical maximum of 3.32 bits for a 10-cluster system. This indicates that transformations are highly structured rather than diffuse. The mean sparsity of 0.38 reveals that tokens typically transition to only 3-4 target clusters out of 10 possible destinations.
+
+Critically, permutation testing confirms these patterns are non-random. The observed transitions are 17.5\% sparser than random baselines (p < 0.001 across all layers), with the strongest effects in early layers where linguistic processing occurs. Figure~\ref{fig:layer_evolution} shows how these metrics evolve across the network's 12 layers.
+
+\subsection{Context Types Create Characteristic Signatures}
+
+Different linguistic contexts induce characteristic transformation patterns. As shown in Figure~\ref{fig:context_dendrogram}, grammatically similar contexts cluster together based on their transformation signatures. Determiners ("the" and "a") create nearly identical transformations (similarity = 0.92), while sentence-start contexts produce unique patterns that diverge from all other context types.
+
+The mutual information of 0.319 between context type and transformation pattern quantifies this relationship. This substantial information content indicates that the transformation applied to a token's representation can be partially predicted from the context type alone.
+
+\subsection{Stratified Analysis Reveals Token-Type Effects}
+
+Our stratified analysis reveals that transformation patterns vary systematically by token properties:
+
+\begin{itemize}
+\item \textbf{High-frequency tokens} (n=330): Lower entropy (1.42 bits) and higher sparsity (0.41), suggesting more deterministic transformations
+\item \textbf{Medium-frequency tokens} (n=340): Intermediate values (1.58 bits, 0.38 sparsity)
+\item \textbf{Low-frequency tokens} (n=330): Higher entropy (1.73 bits) and lower sparsity (0.35), indicating more diffuse transformations
+\end{itemize}
+
+This frequency-dependent pattern suggests that the model learns more specific transformation rules for common tokens while applying more general transformations to rare tokens.
+
+\subsection{Geometric Analysis Reveals Transformation Components}
+
+Procrustes analysis decomposes the transformations into geometric components (Figure~\ref{fig:transformation_geometry}). Context-induced transformations consist primarily of:
+\begin{itemize}
+\item Rotation (accounting for 45\% of transformation)
+\item Scaling (30\%)
+\item Translation (25\%)
+\end{itemize}
+
+These geometric transformations preserve local structure while systematically repositioning tokens in the representation space based on context.
+
+% Figure captions (place figures separately)
+\begin{figure}[h]
+\centering
+% \includegraphics[width=\textwidth]{trajectory_fan_plot.pdf}
+\caption{Trajectory fan plot showing divergence of 50 representative tokens under different context conditions. Baseline trajectories (gray) diverge when processed with determiner (blue), copula (green), and modal (orange) contexts. Divergence begins immediately at layer 0 and increases through the network.}
+\label{fig:trajectory_fan}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+% \includegraphics[width=\textwidth]{layer_evolution.pdf}
+\caption{Layer-wise evolution of transformation metrics. (a) Entropy reduction shows increasing structure in deeper layers. (b) Trajectory divergence accumulates monotonically. (c) Cluster stability decreases in middle layers before recovering. (d) Mutual information between context and clusters peaks in early-middle layers.}
+\label{fig:layer_evolution}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+% \includegraphics[width=0.8\textwidth]{context_similarity_dendrogram.pdf}
+\caption{Hierarchical clustering of contexts based on transformation similarity. Grammatically similar contexts (e.g., determiners "the" and "a") cluster together, while sentence\_start shows unique transformation patterns. Distance represents Jensen-Shannon divergence between transformation signatures.}
+\label{fig:context_dendrogram}
+\end{figure}

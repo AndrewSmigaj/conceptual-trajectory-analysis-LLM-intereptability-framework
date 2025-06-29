@@ -1,0 +1,55 @@
+% Introduction for Context Transformation Paper
+
+\section{Introduction}
+
+When a language model processes the word ``bank'' in ``river bank'' versus ``bank account,'' it produces entirely different internal representations. This context-dependent behavior is fundamental to how transformers understand language, yet a puzzling observation emerges from trajectory analysis: when we track how tokens move through a model's layers, adding \emph{any} context causes \emph{complete} trajectory divergence. Every single token we analyzed---from common words like ``the'' to rare technical terms---follows an entirely different path through GPT-2's activation space when preceded by context compared to when processed in isolation.
+
+This 100\% trajectory divergence presents a paradox. If context effects were random perturbations, language models could not maintain the semantic coherence necessary for their impressive performance. Yet if the effects are systematic, why do we observe complete divergence? This paper resolves this paradox by demonstrating that context acts as a \emph{systematic transformation operator} on the representation space, creating predictable, linguistically-structured changes rather than random reorganization.
+
+\subsection{The Context Transformation Puzzle}
+
+Consider how GPT-2 processes the token ``he'' in different contexts:
+\begin{itemize}
+    \item Baseline (no context): $[1, 1, 1, 1, 7, 9, 1, 1, 7, 1, 1, 6]$
+    \item After ``the'': $[9, 9, 4, 7, 6, 0, 0, 2, 5, 5, 0, 3]$
+    \item After ``said'': $[8, 7, 3, 6, 5, 1, 9, 3, 4, 4, 2, 1]$
+\end{itemize}
+
+These numbers represent cluster assignments at each layer using unified clustering---all contexts share the same cluster space. The complete divergence is striking: not a single layer maintains the same cluster assignment across contexts. This pattern holds for every token in the GPT-2 vocabulary.
+
+\subsection{From Divergence to Transformation}
+
+The key insight is recognizing that divergence does not imply randomness. When we rotate a coordinate system, every point moves to a new location, yet the transformation preserves geometric relationships. We hypothesize that context applies similar systematic transformations to token representations, preserving linguistic structure while adapting representations for contextual processing.
+
+To test this hypothesis, we developed a comprehensive analysis framework comprising 17 complementary methods:
+
+\begin{enumerate}
+    \item \textbf{Statistical analyses} to quantify the non-randomness of transformations
+    \item \textbf{Information-theoretic measures} to capture the mutual information between context types and transformation patterns
+    \item \textbf{Geometric decompositions} to identify rotation, scaling, and translation components
+    \item \textbf{Machine learning models} to test the predictability of transformations
+    \item \textbf{Linguistic stratification} to examine how token properties affect transformations
+\end{enumerate}
+
+\subsection{Key Contributions}
+
+This paper makes four primary contributions:
+
+\textbf{1. Empirical Discovery}: We demonstrate that context-induced transformations in GPT-2 are highly systematic, being 17.5\% sparser than random baselines (p < 0.001) with significant mutual information (0.319 bits) between context type and transformation pattern.
+
+\textbf{2. Theoretical Framework}: We introduce the concept of ``context as transformation,'' showing that linguistic context acts as a deterministic operator that transforms representations according to linguistically-motivated rules. This framework explains how models maintain semantic coherence despite complete trajectory divergence.
+
+\textbf{3. Comprehensive Methodology}: Our 17-analysis framework provides a rigorous toolkit for studying context effects in any transformer model. Each analysis targets a specific aspect of the transformation hypothesis, from transition matrix sparsity to geometric decomposition.
+
+\textbf{4. Practical Implications}: Understanding context as systematic transformation has immediate applications for:
+\begin{itemize}
+    \item \textbf{Prompt engineering}: Predicting how context shapes model behavior
+    \item \textbf{Model interpretability}: Revealing the geometric structure of linguistic processing  
+    \item \textbf{Theoretical understanding}: Moving beyond ``black box'' descriptions of transformer behavior
+\end{itemize}
+
+\subsection{Paper Organization}
+
+Section 2 reviews related work on contextualized representations and geometric approaches to understanding neural networks. Section 3 presents our methodology, including the unified clustering approach and 17-analysis framework. Section 4 reports results demonstrating systematic transformations across multiple validation approaches. Section 5 discusses theoretical implications and connections to linguistic theory. Section 6 concludes with broader impact and future directions.
+
+The evidence we present fundamentally changes how we should think about context in language models. Rather than adding noise or random variation, context applies rule-based transformations that respect linguistic structure. This insight opens new avenues for understanding and controlling the remarkable capabilities of transformer language models.
